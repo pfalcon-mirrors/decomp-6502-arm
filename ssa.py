@@ -1674,7 +1674,7 @@ class SSAGraph:
           for j in i.expr.getallops():
             # the operand must be an SSADef and have a link to its definition, which must only define
             # this single operand
-            if isinstance(j, SSADef) and j.define_statement != None and len(j.define_statement.dest) == 1:
+            if isinstance(j, SSADef) and j.define_statement != None and len(j.define_statement.dest) == 1 and j.define_statement.op == ASGN:
               # propagate everything except phi functions
               if (not isinstance(j.define_statement.expr, Expr) or j.define_statement.expr.type != PHI) and \
                  not j.define_statement.expr.dont_propagate:
