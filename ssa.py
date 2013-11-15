@@ -472,6 +472,8 @@ class SSAGraph:
 
     st = SSAStatement()
 
+    debug(SSA, 2, 'translating', insn, hex(insn.bytes[0]), 'to', st.num)
+
     opc = insn.bytes[0]
 
     if insn == None:
@@ -1457,9 +1459,10 @@ class SSAGraph:
 
       alluses += definitions
       
-      debug(SSA, 3, len(alluses))
+      debug(SSA, 3, 'alluses', len(alluses))
       alluses = set(alluses)
-      debug(SSA, 3, len(alluses))
+      debug(SSA, 3, 'alluses set', len(alluses))
+      debug(SSA, 5, 'start', self.start)
       
       #print('DCE uses', [str(x) for x in alluses])
       eliminated = False
@@ -1684,7 +1687,7 @@ class SSAGraph:
                 elif i.expr.getallops().count(j) > 1:
                   debug(SSA, 4, 'not propping', j, 'in', i.expr, 'multiple times to', j.define_statement.expr)
                 else:
-                  debug(SSA, 4, 'propping', i.expr, 'to', j.define_statement.expr)
+                  debug(SSA, 4, 'propping', j, 'in', i.expr, 'to expr of ', j.define_statement)
                   i.expr.substitute(j, j.define_statement.expr)
                   propped = True
 
