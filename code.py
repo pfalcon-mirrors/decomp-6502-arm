@@ -82,6 +82,27 @@ def def2c(ssad, prio = 19, implicit_global=False):
     current_statement.add_comment('XXX: stacked return address accessed')
   return s
 
+def mem_access_style(ops, type):
+  do_array = False
+  base_op = 0
+  idx_op = 1
+  if isinstance(ops[0], int) and ops[0] > arch.max_array_idx:
+    do_array = True
+  elif isinstance(ops[1], int) and ops[1] > arch.max_array_idx:
+    do_array = True
+    base_op = 1
+    idx_op = 0
+  elif isinstance(ops[0], int):
+    base_op = 1
+    idx_op = 0
+  if type == LOAD or type == STORE:
+    type_str = 'uint8_t'
+  elif type == LOAD16 or type == STORE16: 
+    type_str = 'uint16_t'
+  else:
+    type_str = 'uint32_t'
+  return type_str, base_op, idx_op, do_array
+
 def expr2c(ex, prio = 19, preferhex=False):
   global declare_arrays
   myprio = 18
@@ -156,24 +177,66 @@ def expr2c(ex, prio = 19, preferhex=False):
             break
       comment = comment.rstrip(', ')
       current_statement.add_comment(comment)
-  elif ex.type == LOAD:
+  elif ex.type in [LOAD, LOAD16, LOAD32]:
     assert(len(ex.ops) == 2)
     myprio = 2
-    if isinstance(ex.ops[0], int):
-      ret = 'arr_' + zhex(ex.ops[0])
-      declare_arrays[ret] = 'uint8_t'
+    current_statement.add_comment('foo ' + str(ex))
+    if arch.register_base:
+      type, base_op, idx_op, do_array = mem_access_style(ex.ops, ex.type)
+      if do_array:
+        ret = 'arr_' + zhex(ex.ops[base_op])
+        declare_arrays[ret] = type
+      else:   
+        ret = '((' + type + ' *)' + any2c(ex.ops[base_op]) + ')'
+      ret += '[' + any2c(ex.ops[idx_op]) + ']'
     else:
-      ret = '((uint8_t *)' + any2c(ex.ops[0]) + ')'
-    ret += '[' + any2c(ex.ops[1]) + ']'
-  elif ex.type == STORE:
+      if isinstance(ex.ops[0], int):
+        ret = 'arr_' + zhex(ex.ops[0])
+        if ex.type == LOAD:
+          declare_arrays[ret] = 'uint8_t'
+        elif ex.type == LOAD16:
+          declare_arrays[ret] = 'uint16_t'
+        else:
+          declare_arrays[ret] = 'uint32_t'
+      else:
+        if ex.type == LOAD:
+          ret = '((uint8_t *)'
+        elif ex.type == LOAD16:
+          ret = '((uint16_t *)'
+        else:
+          ret = '((uint32_t *)'
+        ret += any2c(ex.ops[0]) + ')'
+      ret += '[' + any2c(ex.ops[1]) + ']'
+  elif ex.type in [STORE, STORE16, STORE32]:
     assert(len(ex.ops) == 3)
     myprio = 2
-    if isinstance(ex.ops[1], int):
-      ret = 'arr_' + zhex(ex.ops[1])
-      declare_arrays[ret] = 'uint8_t'
+    current_statement.add_comment('bar ' + str(ex))
+    if arch.register_base:  
+      type, base_op, idx_op, do_array = mem_access_style(ex.ops[1:], ex.type)
+      if do_array:
+        ret = 'arr_' + zhex(ex.ops[base_op+1])
+        declare_arrays[ret] = type
+      else:   
+        ret = '((' + type + ' *)' + any2c(ex.ops[base_op+1]) + ')'
+      ret += '[' + any2c(ex.ops[idx_op+1]) + '] = ' + any2c(ex.ops[0])
     else:
-      ret = '((uint8_t *)' + any2c(ex.ops[1]) + ')'
-    ret += '[' + any2c(ex.ops[2]) + '] = ' + any2c(ex.ops[0])
+      if isinstance(ex.ops[1], int):
+        ret = 'arr_' + zhex(ex.ops[1])
+        if ex.type == STORE:
+          declare_arrays[ret] = 'uint8_t'
+        elif ex.type == STORE16:
+          declare_arrays[ret] = 'uint16_t'
+        else:
+          declare_arrays[ret] = 'uint32_t'
+      else:
+        if ex.type == STORE:
+          ret = '((uint8_t *)'
+        elif ex.type == STORE16:
+          ret = '((uint16_t *)'
+        else:
+          ret = '((uint32_t *)'
+        ret += any2c(ex.ops[1]) + ')'
+      ret += '[' + any2c(ex.ops[2]) + '] = ' + any2c(ex.ops[0])
   elif ex.type == IOIN:
     assert(len(ex.ops) == 1)
     ret = 'inb(' + any2c(ex.ops[0], preferhex=True) + ')'
