@@ -1544,7 +1544,7 @@ class SSAGraph:
     for i in self.getall():
       if i.op == RETURN:
         for j in i.reaching:
-          if not j in self.definitions:
+          if not j in self.definitions and not j.type in arch.non_return_locs:
             self.definitions += [j]
 
   def find_args(self):
@@ -1552,7 +1552,7 @@ class SSAGraph:
     for i in self.getall():
       if i.expr:
         for j in i.expr.getallops():
-          if isinstance(j, SSADef) and j.idx == 0 and not j in args:
+          if isinstance(j, SSADef) and j.idx == 0 and not j in args and not j.type in arch.non_arg_locs and not j.type == 'ap':
             args += [j]
     args.sort(key = attrgetter('type'))
     debug(ARGRET, 1, 'args:', [str(x) for x in args])
