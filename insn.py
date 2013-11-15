@@ -33,8 +33,8 @@ class Arch:
     self.flags = ['C', 'Z', 'N', 'V']
     self.numbered_registers = False
   def set_arch(self, arch):
+    self.name = arch
     if arch == 'arm':
-      self.name = 'arm'
       self.register_base = True
       self.max_array_idx = 0x10000000
       self.register_type = 'uint32_t'
