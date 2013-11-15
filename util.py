@@ -21,4 +21,7 @@ class UserError(Exception):
   pass
 
 def zhex(num):
-  return hex(num)[2:].zfill(4)
+  if num < 0:
+    return 'n' + hex(-num)[2:].zfill(4)
+  else:
+    return hex(num)[2:].zfill(4)
