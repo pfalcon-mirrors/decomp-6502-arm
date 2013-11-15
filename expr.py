@@ -409,6 +409,14 @@ class Expr:
     if self.type == VAR and isinstance(self.ops[0], int):
       self.type = CONST
       simplifications += 'varconst '
+    if self.type in [STORE, STORE16, STORE32]:
+      if isinstance(self.ops[1], int) and isinstance(self.ops[2], Expr):
+        inside = self.ops[2]
+        if inside.type == ADD and len(inside.ops) == 2 and isinstance(inside.ops[1], int):
+          self.ops[1] += inside.ops[1]
+          inside.type = VAR
+          inside.ops = [inside.ops[0]]
+          simplifications += 'ptrsum '
     if self.type == COMPARE_EQ and isinstance(self.ops[0], Expr) and isinstance(self.ops[1], Expr) and self.ops[0].ops == self.ops[1].ops:
       if self.ops[0].type == COMPARE_LT and self.ops[1].type == SUBFLAGS_V:
         self.type = COMPARE_GES
