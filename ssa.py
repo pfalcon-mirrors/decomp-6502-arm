@@ -55,9 +55,12 @@ class SSAStatement:
     self.comment = []
     self.comment_once = []
     
-  def desthasmem(self):
+  def desthasmem(self, saved_regs_off):
     for i in self.dest:
-      if i.type == 'M':
+      if i.type == 's' and i.addr < saved_regs_off:
+        # XXX: eventually, all stack locations should be considered non-memory
+        return True
+      if i.type[0] == 'M':
         return True
     return False
     
@@ -1462,7 +1465,7 @@ class SSAGraph:
       eliminated = False
       for i in all:
         if i.op == ASGN and \
-           ((not i.desthasmem()) or i.expr.type == PHI) and \
+           ((not i.desthasmem(self.end_base_ptr)) or i.expr.type == PHI) and \
            len(set(i.dest) & alluses) == 0 and \
            len(set(i.dest) & set(definitions)) == 0 and \
            not i in i.next and not i.expr.dont_eliminate:
