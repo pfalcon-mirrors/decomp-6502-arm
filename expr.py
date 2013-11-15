@@ -332,9 +332,9 @@ class Expr:
     if self.type in [SHL, SHR] and isinstance(self.ops[0], int) and isinstance(self.ops[1], int):
       self.type = CONST
       if self.type == SHL:
-        self.ops = [(self.ops[0] << self.ops[1]) & 255]
+        self.ops = [(self.ops[0] << self.ops[1]) & ~(1 << arch.register_size)]
       else:
-        self.ops = [(self.ops[0] >> self.ops[1]) & 255]
+        self.ops = [(self.ops[0] >> self.ops[1]) & ~(1 << arch.register_size)]
       simplifications += 'shl/rconst '
     if self.type == NOT and isinstance(self.ops[0], Expr) and self.ops[0].type in [COMPARE_EQ, COMPARE_GE, COMPARE_NE, COMPARE_LT, ANDFLAGS_Z, ANDFLAGS_NOTZ, EORFLAGS_N, EORFLAGS_NOTN]:
       inside = self.ops[0]
