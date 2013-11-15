@@ -31,6 +31,7 @@ class Arch:
     self.register_type = 'uint8_t'
     self.register_size = 8
     self.flags = ['C', 'Z', 'N', 'V']
+    self.numbered_registers = False
   def set_arch(self, arch):
     if arch == 'arm':
       self.name = 'arm'
@@ -44,6 +45,7 @@ class Arch:
       self.non_return_locs = self.registers[2:] + self.flags
       self.arg_locs = self.registers[0:4]
       self.non_arg_locs = self.registers[4:] + self.flags
+      self.numbered_registers = True
     elif arch == '6502':
       self.registers = ['A', 'X', 'Y']
       # no calling conventions, any register or flag can be used to pass data

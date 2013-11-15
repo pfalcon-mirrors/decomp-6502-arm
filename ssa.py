@@ -1807,7 +1807,10 @@ class SSAGraph:
                 if def_st.expr.type == PHI:
                   # the definition used is defined as a phi function
                   # making it explicit is sufficient to create a copy
-                  def_st.dest[0].dessa_name = type2dessaname(def_st.dest[0].type) + str(def_st.dest[0].idx)
+                  def_st.dest[0].dessa_name = type2dessaname(def_st.dest[0].type)
+                  if arch.numbered_registers:
+                    def_st.dest[0].dessa_name += '_'
+                  def_st.dest[0].dessa_name += str(def_st.dest[0].idx)
                   def_st.expr.type = EXPLICIT_PHI
                   temps[i] = def_st.dest[0]
                   def_st.dest[0].is_dessa_tmp = True
