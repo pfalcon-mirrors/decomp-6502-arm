@@ -202,6 +202,22 @@ def expr2c(ex, prio = 19, preferhex=False):
   elif ex.type == COMPARE_GE:
     myprio = 8
     ret = binop('>=')
+  elif ex.type == COMPARE_GES:
+    # XXX: write as '>=', declare operands signed instead
+    myprio = 8
+    ret = binop('>=s')
+  elif ex.type == COMPARE_GTS:
+    # XXX: write as '>', declare operands signed instead
+    myprio = 8
+    ret = binop('>s')
+  elif ex.type == COMPARE_LTS:
+    # XXX: write as '<', declare operands signed instead
+    myprio = 8
+    ret = binop('<s')
+  elif ex.type == COMPARE_LES:
+    # XXX: write as '<=', declare operands signed instead
+    myprio = 8
+    ret = binop('<=s')
   elif ex.type == ADD:
     myprio = 6
     ret = nadicop('+')
@@ -211,6 +227,9 @@ def expr2c(ex, prio = 19, preferhex=False):
   elif ex.type == NOT:
     myprio = 3
     ret = unop('!')
+  elif ex.type == INV:
+    myprio = 3 # sure?
+    ret = unop('~')
   elif ex.type == AND:
     myprio = 10
     ret = binop('&')
