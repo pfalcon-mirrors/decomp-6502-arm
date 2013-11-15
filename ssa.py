@@ -297,7 +297,7 @@ class SSAGraph:
         myrets += [SSADef(ctx, i.type, i.addr)]
     return myrets
   
-  def fun_args(self, ctx, insn, st):
+  def fun_args(self, ctx, insn, st, sp):
     if not insn in fun_args_d:
       if insn in ssa_in_progress:
         debug(ARGRET, 1, 'function', hex(insn.addr), 'in progress at', hex(st.insn.addr), ', cannot get arguments')
@@ -306,7 +306,10 @@ class SSAGraph:
       ssacache[insn.addr] = ssaify(insn, None, self.iomap)
     myargs = []
     for i in fun_args_d[insn]:
-      myargs += [SSADef.cur(ctx, i.type, i.addr)]
+      if i.type == 's':
+        myargs += [SSADef.cur(ctx, i.type, i.addr + sp)]
+      else:
+        myargs += [SSADef.cur(ctx, i.type, i.addr)]
     return myargs
   
   def translate(self, ctx, insn, sp, end_bp, bp):
