@@ -357,7 +357,7 @@ class Expr:
       else:
         self.ops = [(self.ops[0] >> self.ops[1]) & ~(1 << arch.register_size)]
       simplifications += 'shl/rconst '
-    if self.type == NOT and isinstance(self.ops[0], Expr) and self.ops[0].type in [COMPARE_EQ, COMPARE_GE, COMPARE_NE, COMPARE_LT, ANDFLAGS_Z, ANDFLAGS_NOTZ, EORFLAGS_N, EORFLAGS_NOTN]:
+    if self.type == NOT and isinstance(self.ops[0], Expr) and self.ops[0].type in [COMPARE_EQ, COMPARE_GE, COMPARE_NE, COMPARE_LT, ANDFLAGS_Z, ANDFLAGS_NOTZ, EORFLAGS_N, EORFLAGS_NOTN, COMPARE_GES]:
       inside = self.ops[0]
       self.ops = inside.ops
       if inside.type == COMPARE_EQ:
