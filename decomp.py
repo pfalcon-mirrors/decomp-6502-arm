@@ -28,6 +28,8 @@ import ssa
 import block
 import code
 
+import config
+
 def main():
   sys.setrecursionlimit(10000)
 
@@ -40,6 +42,7 @@ def main():
   parser.add_option('-f', '--debug-file', help='Debug output file name', default=None)
   parser.add_option('-a', '--arch', help='Target architecutre', default='arm')
   options, args = parser.parse_args()
+  config.options = options
 
   try:
     debug.debug_level = int(options.debug_level)

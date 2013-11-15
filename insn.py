@@ -19,6 +19,7 @@ from __future__ import print_function
 
 from util import *
 from debug import *
+import config
 
 OPC_OUTOFRANGE = 0x1000
 
@@ -54,6 +55,7 @@ class Arch:
       raise UserError('unknown architecture ' + arm)
 
 arch = Arch()
+config.arch = arch
 
 class Insn:
   def __init__(self, addr):
