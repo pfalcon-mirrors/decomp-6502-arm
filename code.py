@@ -180,7 +180,8 @@ def expr2c(ex, prio = 19, preferhex=False):
   elif ex.type in [LOAD, LOAD16, LOAD32]:
     assert(len(ex.ops) == 2)
     myprio = 2
-    current_statement.add_comment('foo ' + str(ex))
+    if debug_enabled(3):
+      current_statement.add_comment('load ' + str(ex))
     if arch.register_base:
       type, base_op, idx_op, do_array = mem_access_style(ex.ops, ex.type)
       if do_array:
@@ -210,7 +211,8 @@ def expr2c(ex, prio = 19, preferhex=False):
   elif ex.type in [STORE, STORE16, STORE32]:
     assert(len(ex.ops) == 3)
     myprio = 2
-    current_statement.add_comment('bar ' + str(ex))
+    if debug_enabled(3):
+      current_statement.add_comment('store ' + str(ex))
     if arch.register_base:  
       type, base_op, idx_op, do_array = mem_access_style(ex.ops[1:], ex.type)
       if do_array:
