@@ -20,6 +20,9 @@ from copy import copy
 
 from debug import *
 
+import ssa
+import struct
+from insn import MCodeGraph
 CONST = 0
 VAR = 1
 COMPARE_EQ = 2
@@ -265,6 +268,14 @@ class Expr:
         i.simplify()
     nowop = str(self)
     simplifications = ''
+
+    for i in range(0, len(self.ops)):
+      if isinstance(self.ops[i], ssa.SSADef) and self.ops[i].type[0] == 'M' and isinstance(self.ops[i].addr, int):
+        # XXX: is text writable?
+        if self.ops[i].addr >= MCodeGraph._org and self.ops[i].addr < MCodeGraph._org + len(MCodeGraph._text):
+          self.ops[i] = struct.unpack('<I', MCodeGraph._text[self.ops[i].addr - MCodeGraph._org:self.ops[i].addr - MCodeGraph._org+4])[0]
+          simplifications += 'constmem'
+
     if self.type == VAR and isinstance(self.ops[0], Expr):
       self.type = self.ops[0].type
       self.ops = self.ops[0].ops
