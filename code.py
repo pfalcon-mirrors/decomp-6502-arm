@@ -71,13 +71,13 @@ def def2c(ssad, prio = 19, implicit_global=False):
     assert(ssad.addr == None)
     assert(ssad.dessa_name != None)
     s = ssad.dessa_name
-  if not implicit_global and ssad.type == 'M' and not ssad.is_dessa_tmp and s not in declare_globals:
-    declare_globals[s] = 'uint8_t'
-  elif (ssad.type != 'M' or ssad.is_dessa_tmp) and s not in declare_locals:
+  if not implicit_global and ssad.type[0] == 'M' and not ssad.is_dessa_tmp and s not in declare_globals:
+    declare_globals[s] = 'unknown_t'
+  elif (ssad.type[0] != 'M' or ssad.is_dessa_tmp) and s not in declare_locals:
     if ssad.type == 's':
-      declare_locals[s] = ('uint8_t', '__sp[' + str(ssad.addr) + ']')
+      declare_locals[s] = ('unknown_t', '__sp[' + str(ssad.addr) + ']')
     else:
-      declare_locals[s] = ('uint8_t', None)
+      declare_locals[s] = ('unknown_t', None)
   if ssad.type == 's' and ssad.addr in [1,2]:
     current_statement.add_comment('XXX: stacked return address accessed')
   return s
@@ -124,10 +124,10 @@ def expr2c(ex, prio = 19, preferhex=False):
     for i in range(0, len(ex.ops) - 1):
       # distinguish between memory parameters (implicit) and register
       # parameters (explicit)
-      if ssa.fun_args_d[graph.first_insn][i].type not in ['M', 's']:
+      if ssa.fun_args_d[graph.first_insn][i].type[0] != 'M' and not (ssa.fun_args_d[graph.first_insn][i].type == 's' and ssa.fun_args_d[graph.first_insn][i].addr < 0):
         # for registers, we want 'our' (the caller's) name
         reg_args += [ex.ops[1 + i]]
-      elif ssa.fun_args_d[graph.first_insn][i].type == 'M':
+      elif ssa.fun_args_d[graph.first_insn][i].type[0] == 'M':
         # for memory parameters, we want both names; this is because
         # in our scope, we may just have a constant or a register, which
         # is not very meaningful outside our context
@@ -332,11 +332,11 @@ def get_returns(actual_returns):
     if i.idx == 0:
       continue
     cdef = any2c(i, implicit_global=True)
-    if i.type not in ['M', 's'] and not cdef in rets:
+    if i.type[0] != 'M' and not (i.type == 's' and i.addr < 0) and not cdef in rets:
       assert(isinstance(cdef, str))
       rets += [cdef]
       rets_d += [i]
-    elif i.type == 'M' and not cdef in mrets:
+    elif i.type[0] == 'M' and not cdef in mrets:
       mrets += [cdef]
       mrets_d += [i]
   return rets_d, mrets_d
@@ -377,9 +377,9 @@ def statement2c(st, indent, graph, bare = False):
       # returns
       for i in st.call_uses:
         r = def2c(i, implicit_global=True)
-        if i.type not in ['M', 's'] and not i.is_dessa_tmp:
+        if i.type[0] != 'M' and not (i.type[0] == 's' and i.addr < 0) and not i.is_dessa_tmp:
           rets += [r]
-        elif i.type == 'M':
+        elif i.type[0] == 'M':
           mrets += [r]
         # ignore stack returns
       # sorting is required to get a canonical return struct name
@@ -471,7 +471,7 @@ def code(blk, symbol, symbols, graphs, graph):
   if len(rets) > 1:
     c_header += rets2struct(rets)
   elif len(rets) == 1:
-    c_header += 'uint8_t'
+    c_header += 'unknown_t'
   else:
     c_header += 'void'
   c_header += ' ' + symbol + '('
@@ -481,8 +481,13 @@ def code(blk, symbol, symbols, graphs, graph):
   for i in ssa.fun_args_d[graph.first_insn]:
     # workaround for dead arguments that have not been pruned after return
     # identification
-    if i.dessa_name != None and i.type not in ['M', 's'] and not i.is_dessa_tmp:
-      c_header += 'uint8_t ' + i.dessa_name + ', '
+    if i.dessa_name != None and i.type[0] != 'M' and not (i.type == 's' and i.addr < 0) and not i.is_dessa_tmp:
+      c_header += 'unknown_t '
+      if i.type == 's':
+        c_header += i.dessa_name + '_' + zhex(i.addr)
+      else:
+        c_header += i.dessa_name
+      c_header += ', '
       declare_arguments += [i.dessa_name]
   c_header = c_header.rstrip(', ') + ')\n'
   c_header += '{\n'
