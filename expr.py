@@ -23,6 +23,8 @@ from debug import *
 import ssa
 import struct
 from insn import MCodeGraph
+from config import arch
+
 CONST = 0
 VAR = 1
 COMPARE_EQ = 2
