@@ -25,6 +25,7 @@ import ssa
 from expr import *
 from util import *
 from debug import *
+from insn import arch
 
 sym_dict = dict()
 graph_dict = dict()

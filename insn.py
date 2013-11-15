@@ -22,6 +22,19 @@ from debug import *
 
 OPC_OUTOFRANGE = 0x1000
 
+class Arch:
+  def __init__(self):
+    self.name = None
+    self.register_base = False
+  def set_arch(self, arch):
+    if arch == 'arm':
+      self.name = 'arm'
+      self.register_base = True
+    else:
+      raise UserError('unknown architecture ' + arm)
+
+arch = Arch()
+
 class Insn:
   def __init__(self, addr):
     self.addr = addr

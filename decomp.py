@@ -38,6 +38,7 @@ def main():
   parser.add_option('-d', '--debug', help='Debug types enabled', default='all')
   parser.add_option('-v', '--debug-level', help='Debug verbosity level', default='0')
   parser.add_option('-f', '--debug-file', help='Debug output file name', default=None)
+  parser.add_option('-a', '--arch', help='Target architecutre', default='arm')
   options, args = parser.parse_args()
 
   try:
@@ -85,6 +86,8 @@ def main():
       iomap = [(0x2000, 0x4017)]
   except ValueError:
     raise UserError('invalid MMIO ranges specified')
+
+  insn.arch.set_arch(options.arch)
 
   debug.debug(debug.MAIN, 1, 'iomap', iomap)
 
