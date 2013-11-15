@@ -217,16 +217,18 @@ class Expr:
     ops = []
     for i in self.ops:
       if isinstance(i, Expr):
+        assert(not (i is self))
         ops += i.getallops()
       else:
         ops += [i]
     return ops
 
   def substitute(self, old, new, dup = False):
+    assert(not (self is new))
     if dup:
       self = Expr(self.type, copy(self.ops))
     for i in range(0, len(self.ops)):
-      if isinstance(self.ops[i], Expr):
+      if isinstance(self.ops[i], Expr) and not (self.ops[i] is new):
         self.ops[i].substitute(old, new, dup)
       elif self.ops[i] == old:
         self.ops[i] = new
