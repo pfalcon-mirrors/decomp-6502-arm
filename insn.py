@@ -29,6 +29,7 @@ class Arch:
     self.max_array_idx = 0x100
     self.register_type = 'uint8_t'
     self.register_size = 8
+    self.flags = ['C', 'Z', 'N', 'V']
   def set_arch(self, arch):
     if arch == 'arm':
       self.name = 'arm'
@@ -36,6 +37,19 @@ class Arch:
       self.max_array_idx = 0x10000000
       self.register_type = 'uint32_t'
       self.register_size = 32
+      # XXX: should this contain R13-R15?
+      self.registers = ['R0', 'R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8', 'R9', 'R10', 'R11', 'R12', 'R13', 'R14', 'R15']
+      self.return_locs = self.registers[0:2]
+      self.non_return_locs = self.registers[2:] + self.flags
+      self.arg_locs = self.registers[0:4]
+      self.non_arg_locs = self.registers[4:] + self.flags
+    elif arch == '6502':
+      self.registers = ['A', 'X', 'Y']
+      # no calling conventions, any register or flag can be used to pass data
+      self.return_locs = self.registers + self.flags
+      self.non_return_locs = []
+      self.arg_locs = self.return_locs
+      self.non_arg_locs = []
     else:
       raise UserError('unknown architecture ' + arm)
 

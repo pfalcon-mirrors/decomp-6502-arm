@@ -180,13 +180,10 @@ class SSAGraph:
         # XXX: This is a partial workaround for missing phi functions at
         # function entry points.  Actually, we'd have to define every single
         # memory location as well...
-        SSADef(self, 'A', idx=0)
-        SSADef(self, 'X', idx=0)
-        SSADef(self, 'Y', idx=0)
-        SSADef(self, 'C', idx=0)
-        SSADef(self, 'Z', idx=0)
-        SSADef(self, 'N', idx=0)
-        SSADef(self, 'V', idx=0)
+        for i in arch.registers:
+          SSADef(self, i, idx = 0)
+        for i in arch.flags:
+          SSADef(self, i, idx = 0)
       else:
         self.local_indices = local_indices
     def copy(self):
