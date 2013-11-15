@@ -205,6 +205,8 @@ class SSAGraph:
     self.blocks = None
     self.iomap = iomap
     self.origin = None
+    self.base_ptr = 0
+    self.end_base_ptr = 0
     # Definitions with index zero are implicitly created when used.
     # To make sure there is only one such definition per graph, we save
     # the first one created in a graph-wide dictionary and always
@@ -232,17 +234,21 @@ class SSAGraph:
         if not i in dumped:
           self.dump(level, i, dumped)
 
-  def add(self, insn, sp = 0, ctx = None):
+  def add(self, insn, sp = 0, bp = 0, end_bp = 0, ctx = None):
     if ctx == None:
       ctx = SSAGraph.SSAifyContext(self)
     if self.first_insn == None:
       self.first_insn = insn
     if insn in self.ssa_for_insn:
       return self.ssa_for_insn[insn]
-    (st_start, st_end, sp, next) = self.translate(ctx, insn, sp)
+    (st_start, st_end, sp, bp, end_bp, next) = self.translate(ctx, insn, sp, end_bp, bp)
     if next == None:
       # default control flow, use the successors of the insn
       next = insn.next
+    if bp < self.base_ptr:
+      self.base_ptr = bp
+    if end_bp < 0:
+      self.end_base_ptr = end_bp
     if self.start == None:
       self.start = st_start
     if st_end != None and next:
@@ -252,7 +258,7 @@ class SSAGraph:
       
       for i in next:
         new_ctx = ctx.copy()
-        next_statement = self.add(i, sp, new_ctx)
+        next_statement = self.add(i, sp, bp, end_bp, new_ctx)
         st_end.chain(ctx, next_statement)
         if st_end.op == CALL:
           break
@@ -303,7 +309,7 @@ class SSAGraph:
       myargs += [SSADef.cur(ctx, i.type, i.addr)]
     return myargs
   
-  def translate(self, ctx, insn, sp):
+  def translate(self, ctx, insn, sp, end_bp, bp):
     debug(SSA, 2, 'translating', insn, hex(insn.bytes[0]))
 
     def chain_flags_ldimm(st, imm):
@@ -1402,7 +1408,7 @@ class SSAGraph:
         st.reaching += [i]
 
     self.last_ssa_for_insn[insn] = st
-    return (st_start, st, sp, next)
+    return (st_start, st, sp, bp, end_bp, next)
 
   def getall(self, st = None, got = None, all = None):
     if st == None:
