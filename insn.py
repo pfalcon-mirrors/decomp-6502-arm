@@ -47,6 +47,7 @@ class Insn:
     # one-way, fake_branch can be set to the index into .next that is
     # actually taken; currently used by conditional branches
     self.fake_branch = -1
+    self.fixed_mem = -1
   def __str__(self):
     s = hex(self.addr) + ': ' + self.disas
     if self.next:
@@ -430,6 +431,8 @@ class MCodeGraph:
     self.traced = dict()
   
   def traceall(self, code, org, entries):
+    MCodeGraph._text = code
+    MCodeGraph._org = org
     for i in entries:
       self.trace(code, org, i, None, Symbol(i, 'start'))
   
