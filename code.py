@@ -51,7 +51,7 @@ def label(blk):
 
 def any2c(any, prio = 19, preferhex=False, implicit_global=False):
   if isinstance(any, int):
-    if preferhex:
+    if preferhex or hex(any)[2:].count('0') > str(any).count('0'):
       return hex(any)
     else:
       return str(any)
