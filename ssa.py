@@ -1923,6 +1923,10 @@ def identifyreturns(graphs):
 
 def type2dessaname(type):
   if type == 'M':
-    return 'mem'
+    return 'byte'
+  elif type == 'Mw':
+    return 'dword'
+  elif type == 'Mh':
+    return 'word'
   else:
     return type.lower()
