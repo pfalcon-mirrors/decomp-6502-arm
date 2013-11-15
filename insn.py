@@ -26,10 +26,16 @@ class Arch:
   def __init__(self):
     self.name = None
     self.register_base = False
+    self.max_array_idx = 0x100
+    self.register_type = 'uint8_t'
+    self.register_size = 8
   def set_arch(self, arch):
     if arch == 'arm':
       self.name = 'arm'
       self.register_base = True
+      self.max_array_idx = 0x10000000
+      self.register_type = 'uint32_t'
+      self.register_size = 32
     else:
       raise UserError('unknown architecture ' + arm)
 
