@@ -72,6 +72,30 @@ DEFLAGS_V = 58
 ADCFLAGS_V = 59
 SBBFLAGS_V = 60
 EORFLAGS_NOTN = 61
+LOAD32 = 62
+ORFLAGS_C = 63
+EORFLAGS_C = 64
+MOVFLAGS_C = 65
+MOVFLAGS_Z = 66
+MOVFLAGS_N = 67
+ANDFLAGS_C = 68
+SUBFLAGS_C = 69
+SUBFLAGS_Z = 70
+SUBFLAGS_N = 71
+STORE16 = 72
+STORE32 = 73
+ASR = 74
+ADDFLAGS_C = 75
+ADDFLAGS_Z = 76
+ADDFLAGS_N = 77
+ADDFLAGS_V = 78
+SUBFLAGS_V = 79
+LOAD16 = 80
+INV = 81
+COMPARE_GES = 82
+COMPARE_GTS = 83
+COMPARE_LTS = 84
+COMPARE_LES = 85
 
 class Expr:
   def __init__(self, type, ops):
@@ -141,6 +165,7 @@ class Expr:
       NOP: 'nop',
       NOT: '!',
       LOAD: ' load',
+      LOAD16: ' load16',
       STORE: ' store',
       INTRINSIC: 'intr',
       IOIN: 'inb',
@@ -150,6 +175,29 @@ class Expr:
       DEFLAGS_Z: 'defz',
       DEFLAGS_N: 'defn',
       DEFLAGS_V: 'defv',
+      LOAD32: ' load32',
+      ORFLAGS_C: ' orC',
+      EORFLAGS_C: ' eorC',
+      MOVFLAGS_C: ' movC',
+      MOVFLAGS_Z: ' movZ',
+      MOVFLAGS_N: ' movN',
+      ANDFLAGS_C: ' andC',
+      SUBFLAGS_C: ' -C',
+      SUBFLAGS_Z: ' -Z',
+      SUBFLAGS_N: ' -N',
+      SUBFLAGS_V: ' -V',
+      STORE16: ' store16',
+      STORE32: ' store32',
+      ASR: ' >>s',
+      ADDFLAGS_C: ' +C',
+      ADDFLAGS_Z: ' +Z',
+      ADDFLAGS_N: ' +N',
+      ADDFLAGS_V: ' +V',
+      INV: '~',
+      COMPARE_GES: ' >=s',
+      COMPARE_GTS: ' >s',
+      COMPARE_LTS: ' <s',
+      COMPARE_LES: ' <=s',
     }
     s = '('
     if (len(self.ops) == 1 and t[self.type] != '') or self.type == PHI:
