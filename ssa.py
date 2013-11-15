@@ -1677,6 +1677,8 @@ class SSAGraph:
                  not j.define_statement.expr.dont_propagate:
                 if len(j.define_statement.expr.getallops()) > 10:
                   debug(SSA, 4, 'not propping', i.expr, 'to complex expression', j.define_statement.expr)
+                elif i.expr.getallops().count(j) > 1:
+                  debug(SSA, 4, 'not propping', j, 'in', i.expr, 'multiple times to', j.define_statement.expr)
                 else:
                   debug(SSA, 4, 'propping', i.expr, 'to', j.define_statement.expr)
                   i.expr.substitute(j, j.define_statement.expr)
