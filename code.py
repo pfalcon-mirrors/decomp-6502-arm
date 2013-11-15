@@ -509,6 +509,8 @@ def code(blk, symbol, symbols, graphs, graph):
       c_header += ', '
       declare_arguments += [i.dessa_name]
   c_header = c_header.rstrip(', ') + ')\n'
+  if debug_enabled(2):
+    c_header += '/* bp ' + hex(graph.base_ptr) + ' ebp ' + hex(graph.end_base_ptr) + ' */\n'
   c_header += '{\n'
   indent = 4
   done = dict()
