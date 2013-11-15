@@ -237,13 +237,25 @@ def expr2c(ex, prio = 19, preferhex=False):
           ret = '((uint32_t *)'
         ret += any2c(ex.ops[1]) + ')'
       ret += '[' + any2c(ex.ops[2]) + '] = ' + any2c(ex.ops[0])
-  elif ex.type == IOIN:
+  elif ex.type in [IOIN, IOIN16, IOIN32]:
     assert(len(ex.ops) == 1)
-    ret = 'inb(' + any2c(ex.ops[0], preferhex=True) + ')'
+    if ex.type == IOIN:
+      mod = 'b'
+    elif ex.type == IOIN16:
+      mod = 'w'
+    else:
+      mod = 'l'
+    ret = 'in' + mod + '(' + any2c(ex.ops[0], preferhex=True) + ')'
     myprio = 1
-  elif ex.type == IOOUT:
+  elif ex.type in [IOOUT, IOOUT16, IOOUT32]:
     assert(len(ex.ops) == 2)
-    ret = 'outb(' + any2c(ex.ops[0], preferhex = True) + ', ' + any2c(ex.ops[1], preferhex = True) + ')'
+    if ex.type == IOOUT32:
+      mod = 'l'
+    elif ex.type == IOOUT16:
+      mod = 'w'
+    else:
+      mod = 'b'
+    ret = 'out' + mod + '(' + any2c(ex.ops[0], preferhex = True) + ', ' + any2c(ex.ops[1], preferhex = True) + ')'
     myprio = 1
   elif ex.type == SHR:
     myprio = 7
