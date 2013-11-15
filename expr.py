@@ -363,6 +363,8 @@ class Expr:
         self.type = EORFLAGS_NOTN
       elif inside.type == EORFLAGS_NOTN:
         self.type = EORFLAGS_N
+      elif inside.type == COMPARE_GES:
+        self.type = COMPARE_LTS
       simplifications += 'notcond '
     if self.type in [COMPARE_EQ, COMPARE_NE, ANDFLAGS_N, ANDFLAGS_Z] and isinstance(self.ops[0], int) and isinstance(self.ops[1], int):
       if self.type == COMPARE_EQ:
