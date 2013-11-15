@@ -401,6 +401,30 @@ class Expr:
     if self.type == VAR and isinstance(self.ops[0], int):
       self.type = CONST
       simplifications += 'varconst '
+    if self.type == COMPARE_EQ and isinstance(self.ops[0], Expr) and isinstance(self.ops[1], Expr) and self.ops[0].ops == self.ops[1].ops:
+      if self.ops[0].type == COMPARE_LT and self.ops[1].type == SUBFLAGS_V:
+        self.type = COMPARE_GES
+        self.ops = self.ops[0].ops
+        simplifications += 'signedge '
+    if self.type == AND and isinstance(self.ops[0], Expr) and isinstance(self.ops[1], Expr) and self.ops[0].ops == self.ops[1].ops:
+      if self.ops[0].type == COMPARE_NE and self.ops[1].type == COMPARE_GES:
+        self.type = COMPARE_GTS
+        self.ops = self.ops[0].ops
+        simplifications += 'signedgt '
+    if self.type == COMPARE_NE and isinstance(self.ops[0], Expr) and isinstance(self.ops[1], Expr) and self.ops[0].ops == self.ops[1].ops:
+      if self.ops[0].type == COMPARE_LT and self.ops[1].type == SUBFLAGS_V:
+        self.type = COMPARE_LTS
+        self.ops = self.ops[0].ops
+        simplifications += 'signedlt '
+    if self.type == OR and isinstance(self.ops[0], Expr) and isinstance(self.ops[1], Expr) and self.ops[0].ops == self.ops[1].ops:
+      if self.ops[0].type == COMPARE_EQ and self.ops[1].type == COMPARE_LTS:
+        self.type = COMPARE_LES
+        self.ops = self.ops[0].ops
+        simplifications += 'signedle '
+    if self.type == MOVFLAGS_Z:
+      self.type = NOT
+      self.ops = [self.ops[0]]
+      simplifications += 'movz '
     if nowop != str(self):
       debug(EXPR, 4, 'simplified', nowop, 'to', self, 'using', simplifications)
       self.simplify()
