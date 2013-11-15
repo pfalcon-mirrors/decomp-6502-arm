@@ -740,7 +740,7 @@ def code(blk, symbol, symbols, graphs, graph):
       if t[1] != None:
         c_decl += ' = ' + t[1]
         if '__sp' in t[1] and not declare_stack:
-          c_extern += 'extern uint8_t *__sp;\n'
+          c_extern += 'extern ' + arch.register_type + ' *__sp;\n'
           declare_stack = True
       c_decl += ';\n'
 
