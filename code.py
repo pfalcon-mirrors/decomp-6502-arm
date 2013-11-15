@@ -1,5 +1,5 @@
 # code.py
-# Copyright (C) 2012 Ulrich Hecht
+# Copyright (C) 2012, 2013 Ulrich Hecht
 
 # This file is part of 6502 Decompiler.
 
