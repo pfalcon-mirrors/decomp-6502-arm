@@ -96,6 +96,10 @@ COMPARE_GES = 82
 COMPARE_GTS = 83
 COMPARE_LTS = 84
 COMPARE_LES = 85
+IOIN16 = 86
+IOIN32 = 87
+IOOUT16 = 88
+IOOUT32 = 89
 
 class Expr:
   def __init__(self, type, ops):
@@ -169,7 +173,11 @@ class Expr:
       STORE: ' store',
       INTRINSIC: 'intr',
       IOIN: 'inb',
+      IOIN16: 'inw',
+      IOIN32: 'inl',
       IOOUT: ' outb',
+      IOOUT16: ' outw',
+      IOOUT32: ' outl',
       FLAGS: ' flags',
       DEFLAGS_C: 'defc',
       DEFLAGS_Z: 'defz',
