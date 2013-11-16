@@ -124,8 +124,9 @@ def main():
     if debug.debug_level >= 4:
       block.graphviz(bb)
     i.blocks = bb
+  cd = code.Code()
   for i in ssa_funs:
-    print(code.code(i.blocks, i.symbol, symbols = mcg.symbols, graphs = ssa_funs, graph = i), end='')
+    print(cd.code(i.blocks, i.symbol, symbols = mcg.symbols, graphs = ssa_funs, graph = i), end='')
     print('=' * 78)
 
 if __name__ == '__main__':
