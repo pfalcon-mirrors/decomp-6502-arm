@@ -100,7 +100,10 @@ def trace(self, code, org, addr, ins):
           ins.next = None
       else:
         debug(TRACE, 4, 'LDR pc,[pc...])')
-        daddr_loc = ins.imm12 + addr + 8
+        if ins.op & 0x08:
+          daddr_loc = ins.imm12 + addr + 8
+        else:
+          daddr_loc = -ins.imm12 + addr + 8
         daddr = struct.unpack('<I', code[daddr_loc:daddr_loc + 4])[0]
         if ins.cond != 0xe:
           ins.next = [self.trace(code, org, addr + 4, ins), self.trace(code, org, daddr, ins)]
