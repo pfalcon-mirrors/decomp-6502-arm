@@ -19,6 +19,7 @@ from debug import *
 from ssa import SSAStatement, SSADef, IMPURE, ASGN, BRANCH_COND, RETURN, CALL
 from expr import *
 from insn import OPC_OUTOFRANGE
+from util import *
 
 def translate(self, ctx, insn, sp, end_bp, bp):
 
