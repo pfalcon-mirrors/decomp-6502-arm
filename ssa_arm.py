@@ -182,6 +182,10 @@ def translate(self, ctx, insn, sp, end_bp, bp):
       st.expr = Expr(VAR, [SSADef.cur(ctx, 'C')])
     elif insn.cond == 3:
       st.expr = Expr(NOT, [SSADef.cur(ctx, 'C')])
+    elif insn.cond == 4:
+      st.expr = Expr(VAR, [SSADef.cur(ctx, 'N')])
+    elif insn.cond == 5:
+      st.expr = Expr(NOT, [SSADef.cur(ctx, 'N')])
     elif insn.cond == 8:
       st.expr = Expr(AND, [SSADef.cur(ctx, 'C'), Expr(NOT, [SSADef.cur(ctx, 'Z')])])
     elif insn.cond == 9:
