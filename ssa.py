@@ -692,6 +692,23 @@ class SSAGraph:
             i.insn.fixed_mem = i.expr.ops[1]
           i.insn.fixed_mem += i.expr.ops[0]
           debug(SSA, 5, 'found constant load from', hex(i.insn.fixed_mem), 'in', i)
+      # simplify cases in which a loop counter is incremented/decremented and
+      # the old value is checked afterwards; this is a typical result of the
+      # ARM idiom "SUBS Rx, Rx,... ; BNE ..."
+      if _pass == 2 and i.op == ASGN and i.expr.type in [ADD, SUB] and len(i.next) == 1 and len(i.next[0].comefrom) == 1 and len(i.expr.ops) == 2 and isinstance(i.expr.ops[1], int) and \
+        isinstance(i.expr.ops[0], SSADef) and len(i.dest) == 1 and i.dest[0].type == i.expr.ops[0].type:
+          debug(SSA, 6, 'found inc/dec by int in', i)
+          if i.expr.type == ADD:
+            compl = SUB
+          else:
+            compl = ADD
+          n = i.next[0]
+          for j in n.expr.getallops():
+            if i.expr.ops[0] == j:
+              debug(SSA, 6, 'bingo!', j, n)
+              n.expr = n.expr.substitute(j, Expr(compl, [i.dest[0], i.expr.ops[1]]), dup = True)
+              debug(SSA, 6, 'new statement', n)
+              debug(SSA, 6, 'pre statement', i)
 
   def is_io(self, addr):
     for i in self.iomap:
