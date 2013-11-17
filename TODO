@@ -2,6 +2,25 @@
 - when coding basic blocks, if a successor is containered, emit a goto
   instead of coding it (it will be coded in its advanced block, and it
   will probably look nicer; see random_funkyloop.bin)
+- compound type recovery:
+  - identify local variable frame DONE
+  - identify stack object bases DONE
+  - create SSAType class describing what we can find out about a type
+    and attach an instance to every definition DONE
+  - estimate stack object sizes DONE
+  - link scalar stack locations to stack objects DONE
+  - code scalar stack accesses as struct accesses DONE
+  - declare stack objects as compound data types DONE
+  - propagate compound type information to callees
+  - code compound type function arguments as such DONE
+- scalar type recovery:
+  - record access sizes
+  - record signed comparisons
+  - record use in indirect branches (function pointers)
+  - record dereferencing (data pointers)
+- propagate "unpropagatable" expressions in specific simple cases, e.g.
+  single uses in the next node (should often avoid unnecessary locals)
+- don't code assignments to stack parameters
 
 === OPTIONAL
 - export graphs to graphviz:
