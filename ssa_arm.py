@@ -18,6 +18,7 @@
 from debug import *
 from ssa import SSAStatement, SSADef, IMPURE, ASGN, BRANCH_COND, RETURN, CALL
 from expr import *
+from insn import OPC_OUTOFRANGE
 
 def translate(self, ctx, insn, sp, end_bp, bp):
 
@@ -167,7 +168,7 @@ def translate(self, ctx, insn, sp, end_bp, bp):
       # imm
       return Expr(op, [SSADef.cur(ctx, 'R'+str(insn.rm)), insn.shift_bits])
 
-  if insn.cond < 0xe or insn.artificial_branch != -1:
+  if insn.bytes[0] != OPC_OUTOFRANGE and insn.cond < 0xe or insn.artificial_branch != -1:
     debug(SSA, 5, "conditional", insn, hex(insn.artificial_branch))
     # conditional
     st.op = BRANCH_COND
@@ -203,8 +204,11 @@ def translate(self, ctx, insn, sp, end_bp, bp):
 
     assert(insn.op & 0xf0 == 0xa0 or insn.artificial_branch != -1)
 
-  debug(SSA, 6, 'fuck insn', insn, insn.cond, insn.op)
-  if insn.cond == 0xf:	# NV predicate
+  if insn.bytes[0] == OPC_OUTOFRANGE:
+    st.dest = []
+    st.op = IMPURE
+    st.expr = Expr(INTRINSIC, ['thunk', insn.addr])
+  elif insn.cond == 0xf:	# NV predicate
       debug(SSA, 5, "NV predicate")
       st.dest = []
       st.op = ASGN
