@@ -366,6 +366,13 @@ class SSAGraph:
           self.getall(i, got, all)
     return all
 
+  def get_all_defs(self):
+    defs = set()
+    for i in self.getall():
+      for j in i.dest:
+        defs.add(j)
+    return defs
+
   def dce(self):
     eliminated = True
     while eliminated:
@@ -474,12 +481,17 @@ class SSAGraph:
       #self.dump()
   
   def find_definitions(self, st = None, done = None):
+    # definitions that may be returns
     self.definitions = []
+    # all reaching definitions
+    self.definitions_all = []
     for i in self.getall():
       if i.op == RETURN:
         for j in i.reaching:
           if not j in self.definitions and not j.type in arch.non_return_locs:
             self.definitions += [j]
+          if not j in self.definitions_all:
+            self.definitions_all += [j]
 
   def find_args(self):
     args = []
