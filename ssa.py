@@ -166,6 +166,12 @@ class SSADef:
       ctx.local_indices[key] = ret
     return ret
   
+  def is_text(self):
+    return self.type[0] == 'M' and \
+           isinstance(self.addr, int) and \
+           self.addr >= MCodeGraph._org and \
+           self.addr < MCodeGraph._org + len(MCodeGraph._text)
+
   def __str__(self):
     s = self.type
     if self.addr != None:
@@ -669,7 +675,7 @@ class SSAGraph:
             # always branch
             i.insn.fake_branch = 1
       if _pass == 1 and i.op == IMPURE and i.expr.type in [STORE, STORE16, STORE32] and \
-        (isinstance(i.expr.ops[2], int) or (isinstance(i.expr.ops[2], SSADef) and i.expr.ops[2].type[0] == 'M' and isinstance(i.expr.ops[2].addr, int))) and \
+        (isinstance(i.expr.ops[2], int) or (isinstance(i.expr.ops[2], SSADef) and i.expr.ops[2].is_text())) and \
         isinstance(i.expr.ops[1], int):
           if isinstance(i.expr.ops[2], SSADef):
             i.insn.fixed_mem = struct.unpack('<I', MCodeGraph._text[i.expr.ops[2].addr - MCodeGraph._org:i.expr.ops[2].addr - MCodeGraph._org+4])[0]
@@ -678,7 +684,7 @@ class SSAGraph:
           i.insn.fixed_mem += i.expr.ops[1]
           debug(SSA, 5, 'found constant store to', hex(i.insn.fixed_mem), 'in', i)
       if _pass == 1 and i.op == ASGN and i.expr.type in [LOAD, LOAD16, LOAD32] and \
-        (isinstance(i.expr.ops[1], int) or (isinstance(i.expr.ops[1], SSADef) and i.expr.ops[1].type[0] == 'M' and isinstance(i.expr.ops[1].addr, int))) and \
+        (isinstance(i.expr.ops[1], int) or (isinstance(i.expr.ops[1], SSADef) and i.expr.ops[1].is_text())) and \
         isinstance(i.expr.ops[0], int):
           if isinstance(i.expr.ops[1], SSADef):
             i.insn.fixed_mem = struct.unpack('<I', MCodeGraph._text[i.expr.ops[1].addr - MCodeGraph._org:i.expr.ops[1].addr - MCodeGraph._org+4])[0]
