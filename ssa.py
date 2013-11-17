@@ -800,6 +800,21 @@ class SSAGraph:
           do_dessa(i, defs.copy())
     do_dessa(self.start)
 
+  def recover_types(self):
+    high = self.end_base_ptr
+    for i in sorted(self.stack_obj_ptrs):	# top down
+      for j in self.stack_obj_defs:
+        if j in self.definitions_all and j.addr == i:
+          # found a reaching stack object for this address
+          j.data_type.size = high - i
+          debug(SSA, 6, 'recovered size of', j, 'to be', high - i)
+          # find stack scalars that are part of this object
+          for k in self.get_all_defs():	# XXX: self.definitions_all?
+            if k.type == 's' and (k.addr >= j.addr and k.addr < j.addr + j.data_type.size):
+              debug(SSA, 6, 'declaring', k, 'to be member of', j)
+              k.parent_def = j
+      high = i
+
 def ssaify(insn, symbol, iomap):
   if insn.addr in ssacache:
     debug(SSA, 2, 'serving', insn, 'from SSA cache')
@@ -834,6 +849,7 @@ def ssaify(insn, symbol, iomap):
   ssag.find_definitions()
   ssag.find_args()
   ssag.find_rets()
+  ssag.recover_types()
   debug(SSA, 1, '--- DONE', insn)
   debug(ARGRET, 4, 'adding', ssag, 'for insn', insn, 'to ssacache')
   ssacache[insn.addr] = ssag
