@@ -236,13 +236,26 @@ class Expr:
         ops += [i]
     return ops
 
+  def copy(self):
+    new_ops = []
+    for i in self.ops:
+      if isinstance(i, Expr):
+        new_ops += [i.copy()]
+      else:
+        new_ops += [i]
+    new_expr = Expr(self.type, new_ops)
+    new_expr.dont_propagate = self.dont_propagate
+    new_expr.dont_eliminate = self.dont_eliminate
+    return new_expr
+
   def substitute(self, old, new, dup = False):
     assert(not (self is new))
     if dup:
-      self = Expr(self.type, copy(self.ops))
+      # don't copy definitions, prevents matching using ==
+      self = self.copy()
     for i in range(0, len(self.ops)):
       if isinstance(self.ops[i], Expr) and not (self.ops[i] is new):
-        self.ops[i].substitute(old, new, dup)
+        self.ops[i] = self.ops[i].substitute(old, new, dup)
       elif self.ops[i] == old:
         self.ops[i] = new
     return self
