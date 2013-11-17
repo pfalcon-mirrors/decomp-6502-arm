@@ -32,6 +32,7 @@ class Arch:
     self.register_size = 8
     self.flags = ['C', 'Z', 'N', 'V']
     self.numbered_registers = False
+    self.stacked_return_address = False
   def set_arch(self, arch):
     self.name = arch
     if arch == 'arm':
@@ -53,6 +54,7 @@ class Arch:
       self.non_return_locs = []
       self.arg_locs = self.return_locs
       self.non_arg_locs = []
+      self.stacked_return_address = True
     else:
       raise UserError('unknown architecture ' + arm)
 

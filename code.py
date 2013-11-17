@@ -20,7 +20,7 @@ from __future__ import print_function
 from operator import attrgetter
 
 import block
-from ssa import SSADef, CALL, RETURN, LOAD, STORE, ASGN, BRANCH_COND, IMPURE, ENDLESS_LOOP, type2dessaname
+from ssa import SSADef, SSAType, CALL, RETURN, LOAD, STORE, ASGN, BRANCH_COND, IMPURE, ENDLESS_LOOP, type2dessaname
 import ssa
 from expr import *
 from util import *
@@ -92,8 +92,11 @@ class Code:
       return self.def2c(any, prio, implicit_global)
     raise InternalError('unknown operand ' + str(any) + ' of type ' + str(type(any)))
 
-  def def2c(self, ssad, prio = 19, implicit_global=False):
-    if isinstance(ssad.addr, int):
+  def def2c(self, ssad, prio = 19, implicit_global=False, deref_compound = True):
+    if ssad.type == 's' and ssad.parent_def != None:
+      debug(CODE, 6, 'found',ssad,'to be member of', ssad.parent_def)
+      s = self.def2c(ssad.parent_def, deref_compound = False) + '.' + 'mem_' + zhex(ssad.addr - ssad.parent_def.addr)
+    elif isinstance(ssad.addr, int):
       if ssad.dessa_name == None:
         raise InternalError('no dessa_name in ' + str(ssad) + '(' + repr(ssad) + '), defined in ' + str(ssad.define_statement))
       s = ssad.dessa_name + '_' + zhex(ssad.addr)
@@ -101,15 +104,20 @@ class Code:
       assert(ssad.addr == None)
       assert(ssad.dessa_name != None)
       s = ssad.dessa_name
-    if not implicit_global and ssad.type[0] == 'M' and not ssad.is_dessa_tmp and s not in declare_globals:
-      declare_globals[s] = 'unknown_t'
-    elif (ssad.type[0] != 'M' or ssad.is_dessa_tmp) and s not in declare_locals:
+    if not implicit_global and ssad.type[0] == 'M' and not ssad.is_dessa_tmp and s not in self.declare_globals:
+      self.declare_globals[s] = 'unknown_t'
+    elif (ssad.type[0] != 'M' or ssad.is_dessa_tmp) and s not in self.declare_locals and ssad.parent_def == None:
       if ssad.type == 's':
         self.declare_locals[s] = ('unknown_t', '__sp[' + str(ssad.addr) + ']')
       else:
-        declare_locals[s] = ('unknown_t', None)
-    if ssad.type == 's' and ssad.addr in [1,2]:
+        dtype = 'unknown_t'
+        if ssad.data_type.type == SSAType.COMPOUND:
+          dtype = 'struct unknown_s'
+        self.declare_locals[s] = (dtype, None)
+    if ssad.type == 's' and ssad.addr in [1,2] and arch.stacked_return_address:
       current_statement.add_comment('XXX: stacked return address accessed')
+    if ssad.data_type.type == SSAType.COMPOUND and deref_compound:
+      s = '&' + s
     return s
 
   def expr2c(self, ex, prio = 19, preferhex=False):
