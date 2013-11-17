@@ -59,6 +59,7 @@ def block_comment(indent, comment):
 
 class Code:
   def __init__(self):
+    self.graph = None
     self.sym_dict = dict()
     self.graph_dict = dict()
 
@@ -92,7 +93,6 @@ class Code:
     raise InternalError('unknown operand ' + str(any) + ' of type ' + str(type(any)))
 
   def def2c(self, ssad, prio = 19, implicit_global=False):
-    global declare_locals, declare_globals
     if isinstance(ssad.addr, int):
       if ssad.dessa_name == None:
         raise InternalError('no dessa_name in ' + str(ssad) + '(' + repr(ssad) + '), defined in ' + str(ssad.define_statement))
@@ -105,8 +105,7 @@ class Code:
       declare_globals[s] = 'unknown_t'
     elif (ssad.type[0] != 'M' or ssad.is_dessa_tmp) and s not in declare_locals:
       if ssad.type == 's':
-        declare_locals[s] = ('unknown_t', '__sp[' + str(ssad.addr) + ']')
-        # XXX if ssad.addr in 
+        self.declare_locals[s] = ('unknown_t', '__sp[' + str(ssad.addr) + ']')
       else:
         declare_locals[s] = ('unknown_t', None)
     if ssad.type == 's' and ssad.addr in [1,2]:
@@ -114,7 +113,6 @@ class Code:
     return s
 
   def expr2c(self, ex, prio = 19, preferhex=False):
-    global declare_arrays
     myprio = 18
 
     def unop(operator):
@@ -143,7 +141,7 @@ class Code:
       ret = self.any2c(ex.ops[0])
     elif ex.type == ARGS:
       #print(ex.ops[0], type(ex.ops[0]))
-      sym = sym_dict[ex.ops[0]]
+      sym = self.sym_dict[ex.ops[0]]
       graph = self.graph_dict[ex.ops[0]]
       ret = sym.name + '('
       reg_args = []
@@ -196,7 +194,7 @@ class Code:
         type, base_op, idx_op, do_array = mem_access_style(ex.ops, ex.type)
         if do_array:
           ret = 'arr_' + zhex(ex.ops[base_op])
-          declare_arrays[ret] = type
+          self.declare_arrays[ret] = type
         else:   
           ret = '((' + type + ' *)' + self.any2c(ex.ops[base_op]) + ')'
         ret += '[' + self.any2c(ex.ops[idx_op]) + ']'
@@ -204,11 +202,11 @@ class Code:
         if isinstance(ex.ops[0], int):
           ret = 'arr_' + zhex(ex.ops[0])
           if ex.type == LOAD:
-            declare_arrays[ret] = 'uint8_t'
+            self.declare_arrays[ret] = 'uint8_t'
           elif ex.type == LOAD16:
-            declare_arrays[ret] = 'uint16_t'
+            self.declare_arrays[ret] = 'uint16_t'
           else:
-            declare_arrays[ret] = 'uint32_t'
+            self.declare_arrays[ret] = 'uint32_t'
         else:
           if ex.type == LOAD:
             ret = '((uint8_t *)'
@@ -227,7 +225,7 @@ class Code:
         type, base_op, idx_op, do_array = mem_access_style(ex.ops[1:], ex.type)
         if do_array:
           ret = 'arr_' + zhex(ex.ops[base_op+1])
-          declare_arrays[ret] = type
+          self.declare_arrays[ret] = type
         else:   
           ret = '((' + type + ' *)' + self.any2c(ex.ops[base_op+1]) + ')'
         ret += '[' + self.any2c(ex.ops[idx_op+1]) + '] = ' + self.any2c(ex.ops[0])
@@ -235,11 +233,11 @@ class Code:
         if isinstance(ex.ops[1], int):
           ret = 'arr_' + zhex(ex.ops[1])
           if ex.type == STORE:
-            declare_arrays[ret] = 'uint8_t'
+            self.declare_arrays[ret] = 'uint8_t'
           elif ex.type == STORE16:
-            declare_arrays[ret] = 'uint16_t'
+            self.declare_arrays[ret] = 'uint16_t'
           else:
-            declare_arrays[ret] = 'uint32_t'
+            self.declare_arrays[ret] = 'uint32_t'
         else:
           if ex.type == STORE:
             ret = '((uint8_t *)'
@@ -489,9 +487,8 @@ class Code:
         mrets.sort()
         if len(callee_rets) > 1 and len(rets) > 0:
           # we need a return structure
-          global ret_struct_count
-          rname = 'ret' + str(ret_struct_count)
-          ret_struct_count += 1
+          rname = 'ret' + str(self.ret_struct_count)
+          self.ret_struct_count += 1
           line += self.rets2struct(callee_rets) + ' ' + rname + ' = '
         elif len(callee_rets) == 1 and len(rets) == 1:
           # direct assignment to register variable
@@ -552,18 +549,17 @@ class Code:
     return line + ('' if bare else '\n')
 
   def code(self, blk, symbol, symbols, graphs, graph):
-    global sym_dict, ret_struct_count
-    global declare_locals, declare_globals, declare_arrays
+    self.graph = graph
 
     if symbols != None:
-      sym_dict = symbols
+      self.sym_dict = symbols
     if graphs != None:
       for i in graphs:
         self.graph_dict[i.first_insn.addr] = i
 
     c_header = ''
 
-    if graph.origin in ssa.fun_returns_tentative or \
+    if self.graph.origin in ssa.fun_returns_tentative or \
        graph.origin in ssa.fun_args_tentative:
       c_header += block_comment(0, 'XXX: recursion, inaccurate args/returns')
 
@@ -599,10 +595,10 @@ class Code:
     gotos = []
     labels = []
 
-    ret_struct_count = 0
-    declare_locals = dict()
-    declare_globals = dict()
-    declare_arrays = dict()
+    self.ret_struct_count = 0
+    self.declare_locals = dict()
+    self.declare_globals = dict()
+    self.declare_arrays = dict()
 
     def do_code(blk, norecurse = False):
       global current_statement
@@ -818,7 +814,7 @@ class Code:
     c_decl = ''
     c_extern = ''
     declare_stack = False
-    for i, t in declare_locals.items():
+    for i, t in self.declare_locals.items():
       if i not in declare_arguments:
         c_decl += ind(indent) + t[0] + ' ' + i
         if t[1] != None:
@@ -828,10 +824,10 @@ class Code:
             declare_stack = True
         c_decl += ';\n'
 
-    for i, t in declare_globals.items():
+    for i, t in self.declare_globals.items():
       c_extern += 'extern ' + t + ' ' + i + ';\n'
 
-    for i, t in declare_arrays.items():
+    for i, t in self.declare_arrays.items():
       c_extern += 'extern ' + t + ' ' + i + '[];\n'
 
     return c_extern + c_header + c_decl + c_body
