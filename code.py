@@ -57,6 +57,18 @@ def block_comment(indent, comment):
   s += ' */\n'
   return s
 
+def ssatype2c(ssat):
+  t = 'unknown'
+  if ssat.type == SSAType.COMPOUND:
+    t = 'struct unknown'
+  if ssat.size > 0:
+    t += str(ssat.size)
+  if ssat.type == SSAType.COMPOUND:
+    t += '_s'
+  else:
+    t += '_t'
+  return t
+
 class Code:
   def __init__(self):
     self.graph = None
@@ -105,15 +117,13 @@ class Code:
       assert(ssad.dessa_name != None)
       s = ssad.dessa_name
     if not implicit_global and ssad.type[0] == 'M' and not ssad.is_dessa_tmp and s not in self.declare_globals:
-      self.declare_globals[s] = 'unknown_t'
+      self.declare_globals[s] = ssatype2c(ssad.data_type)
     elif (ssad.type[0] != 'M' or ssad.is_dessa_tmp) and s not in self.declare_locals and ssad.parent_def == None:
+      ctype = ssatype2c(ssad.data_type)
       if ssad.type == 's':
-        self.declare_locals[s] = ('unknown_t', '__sp[' + str(ssad.addr) + ']')
+        self.declare_locals[s] = (ctype, '__sp[' + str(ssad.addr) + ']')
       else:
-        dtype = 'unknown_t'
-        if ssad.data_type.type == SSAType.COMPOUND:
-          dtype = 'struct unknown_s'
-        self.declare_locals[s] = (dtype, None)
+        self.declare_locals[s] = (ctype, None)
     if ssad.type == 's' and ssad.addr in [1,2] and arch.stacked_return_address:
       current_statement.add_comment('XXX: stacked return address accessed')
     if ssad.data_type.type == SSAType.COMPOUND and deref_compound:

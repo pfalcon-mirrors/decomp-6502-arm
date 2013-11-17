@@ -106,6 +106,16 @@ IOIN32 = 87
 IOOUT16 = 88
 IOOUT32 = 89
 
+def access_size(op):
+  if op == LOAD32:
+    return 32
+  elif op == LOAD16:
+    return 16
+  elif op == LOAD:
+    return 8
+  else:
+    raise InternalError("unknown access size for op")
+
 class Expr:
   def __init__(self, type, ops):
     assert(isinstance(ops, list))
@@ -235,6 +245,14 @@ class Expr:
       else:
         ops += [i]
     return ops
+
+  def getallsubexprs(self):
+    exp = []
+    for i in self.ops:
+      if isinstance(i, Expr):
+        assert(not (i is self))
+        exp += [i] + i.getallsubexprs()
+    return exp
 
   def copy(self):
     new_ops = []

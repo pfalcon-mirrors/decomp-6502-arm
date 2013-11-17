@@ -837,6 +837,15 @@ class SSAGraph:
               debug(SSA, 6, 'declaring', k, 'to be member of', j)
               k.parent_def = j
       high = i
+    for i in self.getall():
+      if i.expr:
+        for j in i.expr.getallsubexprs():
+          if j.type in [LOAD, LOAD16, LOAD32]:
+            print("load found", j)
+            if isinstance(j.ops[0], int) and j.ops[0] < arch.max_array_idx and isinstance(j.ops[1], SSADef):
+              j.ops[1].data_type.size = access_size(j.type)
+            elif isinstance(j.ops[1], int) and j.ops[1] < arch.max_array_idx and isinstance(j.ops[0], SSADef):
+              j.ops[0].data_type.size = access_size(j.type)
 
 def ssaify(insn, symbol, iomap):
   if insn.addr in ssacache:
