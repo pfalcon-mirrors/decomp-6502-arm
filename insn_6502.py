@@ -424,3 +424,7 @@ def trace(self, code, org, addr, ins):
       ins.next = [self.trace(code, org, addr + insn_size(opcode), ins)]
 
     return ins
+
+def guess_entry_points(text, org, manual_entries):
+  debug(TRACE, 0, 'entry point guessing not implemented for this architecture')
+  return []

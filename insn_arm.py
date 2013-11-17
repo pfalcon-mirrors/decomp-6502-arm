@@ -116,3 +116,31 @@ def trace(self, code, org, addr, ins):
       ins.next = [self.trace(code, org, addr + 4, ins)]
 
     return link_ins
+
+def guess_entry_points(text, org, manual_entries):
+  # find all "MOV R12, SP" and "PUSH {..., lr}"
+  mov_r12_sp = []
+  push_lr = []
+  for i in range(0, len(text) >> 2):
+    insn = struct.unpack('<I', text[i:i+4])[0]
+    if insn == 0xe1a0c00d:
+      mov_r12_sp += [i]
+    elif insn & 0xffffc000 == 0xe92d4000:
+      push_lr += [i]
+  debug(TRACE, 3, 'found', len(mov_r12_sp), 'times MOV R12, SP;', len(push_lr), 'times PUSH {...lr}')
+
+  # if there are a lot of "MOV R12, SP"'s, we assume the code has been
+  # compiled with frame pointer and functions start at the MOV; otherwise,
+  # functions start at the PUSH
+  if len(mov_r12_sp) > len(push_lr) / 2:
+    entry_points = mov_r12_sp
+  else:
+    entry_points = push_lr
+
+  new_entry_points = []
+  for i in entry_points:
+    i += org
+    if not i in manual_entries:
+      new_entry_points.append(i)
+
+  return new_entry_points

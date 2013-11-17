@@ -47,6 +47,7 @@ class Arch:
       self.arg_locs = self.registers[0:4]
       self.non_arg_locs = self.registers[4:] + self.flags
       self.numbered_registers = True
+      self.guess_entry_points = insn_arm.guess_entry_points
     elif arch == '6502':
       self.registers = ['A', 'X', 'Y']
       # no calling conventions, any register or flag can be used to pass data
@@ -55,6 +56,7 @@ class Arch:
       self.arg_locs = self.return_locs
       self.non_arg_locs = []
       self.stacked_return_address = True
+      self.guess_entry_points = insn_6502.guess_entry_points
     else:
       raise UserError('unknown architecture ' + arm)
 
@@ -111,11 +113,13 @@ class MCodeGraph:
     else:
       raise InternalError('unknown arch ' + arch.name)
   
-  def traceall(self, code, org, entries):
+  def traceall(self, code, org, entries, auto_entries):
     MCodeGraph._text = code
     MCodeGraph._org = org
     for i in entries:
       self.trace(code, org, i, None, Symbol(i, 'start'))
+    for i in auto_entries:
+      self.trace(code, org, i, None, Symbol(i, 'guess'))
   
   def trace(self, code, org, addr, comefrom = None, sym = None):
     def outside():

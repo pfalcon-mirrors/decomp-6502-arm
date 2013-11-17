@@ -40,7 +40,8 @@ def main():
   parser.add_option('-d', '--debug', help='Debug types enabled', default='all')
   parser.add_option('-v', '--debug-level', help='Debug verbosity level', default='0')
   parser.add_option('-f', '--debug-file', help='Debug output file name', default=None)
-  parser.add_option('-a', '--arch', help='Target architecutre', default='arm')
+  parser.add_option('-a', '--arch', help='Target architecture', default='arm')
+  parser.add_option('-g', '--guess', action='store_true', help='Guess entry points', default=False)
   options, args = parser.parse_args()
   config.options = options
 
@@ -94,8 +95,13 @@ def main():
 
   debug.debug(debug.MAIN, 1, 'iomap', iomap)
 
+  if options.guess:
+    auto_entries = insn.arch.guess_entry_points(text, org, entries)
+  else:
+    auto_entries = []
+
   mcg = insn.MCodeGraph()
-  ins = mcg.traceall(text, org, entries)
+  ins = mcg.traceall(text, org, entries, auto_entries)
   ssa_funs = []
   for k,v in mcg.symbols.items():
     debug.debug(debug.MAIN, 2, '=== OSSIFY', v.address, v.name, v.insn)
