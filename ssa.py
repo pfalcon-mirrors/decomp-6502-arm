@@ -144,6 +144,12 @@ class SSADef:
     self.dessa_name = None
     self.is_dessa_tmp = dessa_tmp
     self.data_type = SSAType()
+    self.parent_def = None
+    if dtype.startswith('ap'):
+      debug(SSA, 6, "adding new def to stack objs")
+      ctx.graph.stack_obj_defs.add(self)
+      ctx.graph.stack_obj_ptrs.add(self.addr)
+      self.data_type.type = SSAType.COMPOUND
 
   @staticmethod
   def cur(ctx, dtype, addr = None):
@@ -227,6 +233,8 @@ class SSAGraph:
     self.origin = None
     self.base_ptr = 0
     self.end_base_ptr = 0
+    self.stack_obj_ptrs = set()
+    self.stack_obj_defs = set()
     if arch.name == '6502':
       self.translate = ssa_6502.translate
     elif arch.name == 'arm':
