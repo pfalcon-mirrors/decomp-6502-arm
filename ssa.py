@@ -143,6 +143,7 @@ class SSADef:
     self.define_statement = None
     self.dessa_name = None
     self.is_dessa_tmp = dessa_tmp
+    self.data_type = SSAType()
 
   @staticmethod
   def cur(ctx, dtype, addr = None):
@@ -166,6 +167,20 @@ class SSADef:
       s += hex(self.addr)
     s += '(' + str(self.idx) + ')'
     return s
+
+class SSAType:
+  UNKNOWN = 1
+  SCALAR = 2
+  DPOINTER = 3
+  FPOINTER = 4
+  COMPOUND = 5
+  SIGNED = 6
+  UNSIGNED = 7
+  def __init__(self):
+    self.type = SSAType.UNKNOWN
+    self.size = 0
+    self.signedness = SSAType.UNKNOWN
+    self.members = None
 
 import ssa_6502
 import ssa_arm
