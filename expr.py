@@ -106,6 +106,7 @@ IOIN16 = 86
 IOIN32 = 87
 IOOUT16 = 88
 IOOUT32 = 89
+COMPARE_LE = 90
 
 def access_size(op):
   if op == LOAD32 or op == STORE32:
@@ -148,6 +149,7 @@ class Expr:
       COMPARE_GE: ' >=',
       COMPARE_NE: ' !=',
       COMPARE_LT: ' <',
+      COMPARE_LE: ' <=',
       SUB: ' -',
       ADD: ' +',
       ADD_PTR: ' +p',
@@ -484,10 +486,14 @@ class Expr:
         self.ops = self.ops[0].ops
         simplifications += 'signedlt '
     if self.type == OR and isinstance(self.ops[0], Expr) and isinstance(self.ops[1], Expr) and self.ops[0].ops == self.ops[1].ops:
-      if self.ops[0].type == COMPARE_EQ and self.ops[1].type == COMPARE_LTS:
+      if (self.ops[0].type == COMPARE_EQ and self.ops[1].type == COMPARE_LTS) or (self.ops[0].type == COMPARE_LTS and self.ops[1].type == COMPARE_EQ):
         self.type = COMPARE_LES
         self.ops = self.ops[0].ops
         simplifications += 'signedle '
+      elif (self.ops[0].type == COMPARE_LT and self.ops[1].type == COMPARE_EQ) or (self.ops[0].type == COMPARE_EQ and self.ops[1].type == COMPARE_LT):
+        self.type = COMPARE_LE
+        self.ops = self.ops[0].ops
+        simplifications += 'le '
     if self.type == MOVFLAGS_Z:
       self.type = NOT
       self.ops = [self.ops[0]]
