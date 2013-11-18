@@ -199,6 +199,12 @@ class SSAType:
     self.size = 0
     self.signedness = SSAType.UNSIGNED
     self.members = None
+  def is_dpointer(self, size = -1):
+    if (size != -1):
+      return self.type == SSAType.DPOINTER and self.size == size
+    else:
+      return self.type == SSAType.DPOINTER
+
 
 import ssa_6502
 import ssa_arm
