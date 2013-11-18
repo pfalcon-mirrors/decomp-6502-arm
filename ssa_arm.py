@@ -153,6 +153,15 @@ def translate(self, ctx, insn, sp, end_bp, bp):
     st.expr = Expr(VAR, [SSADef.cur(ctx, src)])
     st.dest = [SSADef(ctx, 's', off+sp)]
 
+  def creg(num):
+    nonlocal sp
+    if num == 13:
+      return SSADef.cur(ctx, 'ap', sp)
+    elif num == 15:
+      return insn.addr + 8
+    else:
+      return SSADef.cur(ctx, 'R'+str(num))
+
   def get_rm():
     if insn.shift == 0:
       op = SHL
@@ -167,7 +176,7 @@ def translate(self, ctx, insn, sp, end_bp, bp):
       return Expr(op, [SSADef.cur(ctx, 'R'+str(insn.rm)), SSADef.cur(ctx, 'R'+str(insn.rs))])
     else:
       # imm
-      return Expr(op, [SSADef.cur(ctx, 'R'+str(insn.rm)), insn.shift_bits])
+      return Expr(op, [creg(insn.rm), insn.shift_bits])
 
   if insn.bytes[0] != OPC_OUTOFRANGE and insn.cond < 0xe or insn.artificial_branch != -1:
     debug(SSA, 5, "conditional", insn, hex(insn.artificial_branch))
@@ -312,15 +321,19 @@ def translate(self, ctx, insn, sp, end_bp, bp):
           do_st_abs('R'+str(insn.rd), insn.fixed_mem, 2)
       else:
         if insn.op & 0x10:	# pre indexing
+          noff = imm
+        else:
+          noff = 0
+        if insn.rn == 13:
           if insn.op & 1:
-            do_ld_reg('R'+str(insn.rd), imm, 'R'+str(insn.rn), 2)
+            do_ld_stack('R'+str(insn.rd), noff, 2)
           else:
-            do_st_reg('R'+str(insn.rd), imm, 'R'+str(insn.rn), 2)
+            do_st_stack('R'+str(insn.rd), noff, 2)
         else:
           if insn.op & 1:
-            do_ld_reg('R'+str(insn.rd), 0, 'R'+str(insn.rn), 2)
+            do_ld_reg('R'+str(insn.rd), noff, 'R'+str(insn.rn), 2)
           else:
-            do_st_reg('R'+str(insn.rd), 0, 'R'+str(insn.rn), 2)
+            do_st_reg('R'+str(insn.rd), noff, 'R'+str(insn.rn), 2)
       if insn.op & 2:	# write back
         st1 = SSAStatement()
         st.chain(ctx, st1)
