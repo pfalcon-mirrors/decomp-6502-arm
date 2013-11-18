@@ -19,8 +19,8 @@ from __future__ import print_function
 
 import sys
 
-SSA, DESSA, EXPR, ARGRET, TRACE, BLOCK, CODE, MAIN = range(0, 8)
-_name = ['ssa', 'dessa', 'expr', 'argret', 'trace', 'block', 'code', 'main']
+SSA, DESSA, EXPR, ARGRET, TRACE, BLOCK, CODE, MAIN, TYPE = range(0, 9)
+_name = ['ssa', 'dessa', 'expr', 'argret', 'trace', 'block', 'code', 'main', 'type']
 enabled = set()
 
 debug_level = 0
