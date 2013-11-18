@@ -309,6 +309,7 @@ class SSAGraph:
         if st_end.op == CALL:
           break
 
+    #self.recover_simple_types('mark0')
     return st_start
 
   def update_phis(self, ctx, st):
@@ -843,15 +844,56 @@ class SSAGraph:
               debug(SSA, 6, 'declaring', k, 'to be member of', j)
               k.parent_def = j
       high = i
-    for i in self.getall():
-      if i.expr:
-        for j in i.expr.getallsubexprs():
-          if j.type in [LOAD, LOAD16, LOAD32]:
-            print("load found", j)
-            if isinstance(j.ops[0], int) and j.ops[0] < arch.max_array_idx and isinstance(j.ops[1], SSADef):
-              j.ops[1].data_type.size = access_size(j.type)
-            elif isinstance(j.ops[1], int) and j.ops[1] < arch.max_array_idx and isinstance(j.ops[0], SSADef):
-              j.ops[0].data_type.size = access_size(j.type)
+
+  def recover_simple_types(self, mark):
+    found = True
+    count = 0
+    while found:
+      debug(TYPE, 5, mark, 'loop', count)
+      count += 1
+      found = False
+      for i in self.getall():
+        if i.expr:
+        #  for j in i.expr.getallsubexprs():
+            j = i.expr
+            if j.type in [LOAD, LOAD16, LOAD32]:
+              if isinstance(j.ops[0], int) and j.ops[0] < arch.max_array_idx and isinstance(j.ops[1], SSADef) and j.ops[1].data_type.type == SSAType.UNKNOWN:
+                debug(TYPE, 5, mark, 'load ptr 1', i)
+                j.ops[1].data_type.size = access_size(j.type)
+                j.ops[1].data_type.type = SSAType.DPOINTER
+                found = True
+              elif isinstance(j.ops[1], int) and j.ops[1] < arch.max_array_idx and isinstance(j.ops[0], SSADef) and j.ops[0].data_type.type == SSAType.UNKNOWN:
+                debug(TYPE, 5, mark, 'load ptr 0', i)
+                j.ops[0].data_type.size = access_size(j.type)
+                j.ops[0].data_type.type = SSAType.DPOINTER
+                found = True
+            if j.type in [STORE, STORE16, STORE32]:
+              if isinstance(j.ops[1], int) and j.ops[1] < arch.max_array_idx and isinstance(j.ops[2], SSADef) and j.ops[2].data_type.type == SSAType.UNKNOWN:
+                debug(TYPE, 5, mark, 'store ptr 2', i)
+                j.ops[2].data_type.size = access_size(j.type)
+                j.ops[2].data_type.type = SSAType.DPOINTER
+                found = True
+              elif isinstance(j.ops[2], int) and j.ops[2] < arch.max_array_idx and isinstance(j.ops[1], SSADef) and j.ops[1].data_type.type == SSAType.UNKNOWN:
+                debug(TYPE, 5, mark, 'store ptr 1', i)
+                j.ops[1].data_type.size = access_size(j.type)
+                j.ops[1].data_type.type = SSAType.DPOINTER
+                found = True
+            if i.op == ASGN and j.type in [ADD, SUB] and isinstance(j.ops[0], SSADef) and j.ops[0].data_type.type == SSAType.DPOINTER and i.dest[0].data_type.type == SSAType.UNKNOWN:
+              debug(TYPE, 5, mark, "sum of pointers",i)
+              i.dest[0].data_type = j.ops[0].data_type
+              found = True
+            if i.op == ASGN and j.type in [ADD, SUB] and isinstance(j.ops[1], SSADef) and j.ops[1].data_type.type == SSAType.DPOINTER and i.dest[0].data_type.type == SSAType.UNKNOWN:
+              debug(TYPE, 5, mark, "sum of pointers",i)
+              i.dest[0].data_type = j.ops[1].data_type
+              found = True
+            if i.op == ASGN and j.type == VAR and j.ops[0].data_type.type != SSAType.UNKNOWN and i.dest[0].data_type.type == SSAType.UNKNOWN:
+              debug(TYPE, 5, mark, 'assignment',i)
+              i.dest[0].data_type = j.ops[0].data_type
+              found = True
+            if i.op == ASGN and j.type == VAR and i.dest[0].data_type.type != SSAType.UNKNOWN and j.ops[0].data_type.type == SSAType.UNKNOWN:
+              debug(TYPE, 5, mark, 'assignment reverse', i)
+              j.ops[0].data_type = i.dest[0].data_type
+              found = True
 
 def ssaify(insn, symbol, iomap):
   if insn.addr in ssacache:
@@ -871,16 +913,19 @@ def ssaify(insn, symbol, iomap):
     ssag.add(insn)
     debug(SSA, 5, 'progress out', hex(insn.addr), [hex(x.addr) for x in ssa_in_progress])
     ssa_in_progress.remove(insn)
+    ssag.recover_simple_types('mark3')
     ssag.dump(2)
     ssag.find_definitions()
     ssag.dce()
     ssag.dump(4)
     ssag.dereach()
+    #ssag.recover_simple_types('mark1')
     ssag.propagate(_pass)
     ssag.dump(4)
     ssag.dce()
     #ssag.dump()
     ssag.simplify(_pass)
+    ssag.recover_simple_types('mark2')
   debug(SSA, 1, '--- FINAL', insn)
   ssag.dump(2)
   # propagation may have redefined reachings
