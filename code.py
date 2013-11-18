@@ -324,6 +324,9 @@ class Code:
     elif ex.type == COMPARE_GE:
       myprio = 8
       ret = binop('>=')
+    elif ex.type == COMPARE_LE:
+      myprio = 8
+      ret = binop('<=')
     elif ex.type == COMPARE_GES:
       # XXX: write as '>=', declare operands signed instead
       myprio = 8
