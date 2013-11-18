@@ -823,7 +823,7 @@ class SSAGraph:
           do_dessa(i, defs.copy())
     do_dessa(self.start)
 
-  def recover_types(self):
+  def recover_compound_types(self):
     high = self.end_base_ptr
     for i in sorted(self.stack_obj_ptrs):	# top down
       for j in self.stack_obj_defs:
@@ -881,7 +881,7 @@ def ssaify(insn, symbol, iomap):
   ssag.find_definitions()
   ssag.find_args()
   ssag.find_rets()
-  ssag.recover_types()
+  ssag.recover_compound_types()
   debug(SSA, 1, '--- DONE', insn)
   debug(ARGRET, 4, 'adding', ssag, 'for insn', insn, 'to ssacache')
   ssacache[insn.addr] = ssag
