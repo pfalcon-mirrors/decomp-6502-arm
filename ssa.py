@@ -191,7 +191,7 @@ class SSAType:
   def __init__(self):
     self.type = SSAType.UNKNOWN
     self.size = 0
-    self.signedness = SSAType.UNKNOWN
+    self.signedness = SSAType.UNSIGNED
     self.members = None
 
 import ssa_6502
