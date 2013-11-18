@@ -58,15 +58,26 @@ def block_comment(indent, comment):
   return s
 
 def ssatype2c(ssat):
-  t = 'unknown'
   if ssat.type == SSAType.COMPOUND:
     t = 'struct unknown'
+  elif ssat.size > 0:
+    if ssat.signedness == SSAType.SIGNED:
+      t = 'int'
+    else:
+      t = 'uint'
+  else:
+    t = 'unknown'
+
   if ssat.size > 0:
     t += str(ssat.size)
+
   if ssat.type == SSAType.COMPOUND:
     t += '_s'
   else:
     t += '_t'
+
+  if ssat.type == SSAType.DPOINTER:
+    t += ' *'
   return t
 
 class Code:
@@ -597,7 +608,7 @@ class Code:
       # workaround for dead arguments that have not been pruned after return
       # identification
       if i.dessa_name != None and i.type[0] != 'M' and not (i.type == 's' and i.addr < 0) and not i.is_dessa_tmp:
-        c_header += 'unknown_t '
+        c_header += ssatype2c(i.data_type) + ' '
         if i.type == 's':
           c_header += i.dessa_name + '_' + zhex(i.addr)
         else:
