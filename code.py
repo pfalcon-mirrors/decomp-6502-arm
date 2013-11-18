@@ -217,7 +217,7 @@ class Code:
     elif ex.type in [LOAD, LOAD16, LOAD32]:
       assert(len(ex.ops) == 2)
       myprio = 2
-      if debug_enabled(3):
+      if debug_enabled(5):
         current_statement.add_comment('load ' + str(ex))
       if arch.register_base:
         type, base_op, idx_op, do_array = mem_access_style(ex.ops, ex.type)
@@ -248,7 +248,7 @@ class Code:
     elif ex.type in [STORE, STORE16, STORE32]:
       assert(len(ex.ops) == 3)
       myprio = 2
-      if debug_enabled(3):
+      if debug_enabled(5):
         current_statement.add_comment('store ' + str(ex))
       if arch.register_base:  
         type, base_op, idx_op, do_array = mem_access_style(ex.ops[1:], ex.type)
