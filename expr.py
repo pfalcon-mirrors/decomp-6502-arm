@@ -24,6 +24,7 @@ import ssa
 import struct
 from insn import MCodeGraph
 from config import arch
+from util import *
 
 CONST = 0
 VAR = 1
