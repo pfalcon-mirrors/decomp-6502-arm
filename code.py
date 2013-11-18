@@ -615,7 +615,7 @@ class Code:
     # code (explicit, i.e. register) function parameters
     # XXX: code implicit (memory) parameters as a comment
     declare_arguments = []
-    for i in ssa.fun_args_d[graph.first_insn]:
+    for i in sorted(ssa.fun_args_d[graph.first_insn], key=attrgetter('type', 'addr')):
       # workaround for dead arguments that have not been pruned after return
       # identification
       if i.dessa_name != None and i.type[0] != 'M' and not (i.type == 's' and i.addr < 0) and not i.is_dessa_tmp:
@@ -854,7 +854,7 @@ class Code:
     c_decl = ''
     c_extern = ''
     declare_stack = False
-    for i, t in self.declare_locals.items():
+    for i, t in sorted(self.declare_locals.items()):
       if i not in declare_arguments:
         c_decl += ind(indent) + t[0] + ' ' + i
         if t[1] != None:
@@ -864,10 +864,10 @@ class Code:
             declare_stack = True
         c_decl += ';\n'
 
-    for i, t in self.declare_globals.items():
+    for i, t in sorted(self.declare_globals.items()):
       c_extern += 'extern ' + t + ' ' + i + ';\n'
 
-    for i, t in self.declare_arrays.items():
+    for i, t in sorted(self.declare_arrays.items()):
       c_extern += 'extern ' + t + ' ' + i + '[];\n'
 
     return c_extern + c_header + c_decl + c_body
