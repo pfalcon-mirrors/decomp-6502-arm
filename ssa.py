@@ -637,7 +637,7 @@ class SSAGraph:
               if (not isinstance(j.define_statement.expr, Expr) or j.define_statement.expr.type != PHI) and \
                  not j.define_statement.expr.dont_propagate and \
                  not (_pass == 1 and j.define_statement.expr.type in [LOAD, LOAD16, LOAD32]):	# we don't know yet if it's I/O
-                if len(j.define_statement.expr.getallops()) > 10:
+                if len(j.define_statement.expr.getallops()) > 15:
                   debug(SSA, 4, 'not propping', i.expr, 'to complex expression', j.define_statement.expr)
                 elif i.expr.getallops().count(j) > 1:
                   debug(SSA, 4, 'not propping', j, 'in', i.expr, 'multiple times to', j.define_statement.expr)
