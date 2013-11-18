@@ -17,10 +17,32 @@
   - record access sizes
   - record signed comparisons
   - record use in indirect branches (function pointers)
-  - record dereferencing (data pointers)
+  - record dereferencing (data pointers)	DONE
 - propagate "unpropagatable" expressions in specific simple cases, e.g.
   single uses in the next node (should often avoid unnecessary locals)
 - don't code assignments to stack parameters
+- simplify "if (a) {...} if (!a) {...}" to "if (a) {...} else {...}"
+  (often encountered due with conditional insns on ARM)
+- often temporary locals are created for registers clobbered by function
+  calls even though the semantics of C would not require them
+  (e.g. maskrom 0x21a4)
+- ARM: make sure all stack-relative accesses are SSA'd as such (search
+  for "r13" in output)
+- simplify expressions containing program counter (search for "r15")
+- simplify off-by-one comparisons that are often the result of the
+  loop-crement simplification
+- do the test-after-update loop simplification also if the test is a
+  bit further down the line (see maskrom fun_8720)
+- strategy for recognizing compound types: use of the same pointer
+  in different-sized accesses at different offsets
+- maskrom fun_3578 doesn't take any parameters, but all calls seem
+  to feel a need to pass some...
+- too many address operators! (see maskrom fun_c800)
+- make stack pointer copying an expression, not a definition
+  - allows simplification in expr
+  - objects can be determined on recovery
+  - base/frame pointer tracking can be done by looking at sp
+    writes only
 
 === OPTIONAL
 - export graphs to graphviz:
@@ -202,4 +224,6 @@
   f8 SED	DONE
 - RAW in MBuggy:fun_55a7	DONE
 - simplify !((mem_0008 & 12) != 0) (BCity fun_c41d)	DONE
-
+- sometimes conditions cannot be simplified because complex expressions
+  are not propagated (e.g. maskrom 0x80b4)	DONE
+- sort stack arguments in function headers	DONE
