@@ -108,11 +108,11 @@ IOOUT16 = 88
 IOOUT32 = 89
 
 def access_size(op):
-  if op == LOAD32:
+  if op == LOAD32 or op == STORE32:
     return 32
-  elif op == LOAD16:
+  elif op == LOAD16 or op == STORE16:
     return 16
-  elif op == LOAD:
+  elif op == LOAD or op == STORE:
     return 8
   else:
     raise InternalError("unknown access size for op")
