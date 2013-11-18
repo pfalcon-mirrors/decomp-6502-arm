@@ -774,6 +774,7 @@ class SSAGraph:
                 nst.dest = [SSADef(None, 'TMP', idx=tmp_index, dessa_tmp=True)]
                 nst.dest[0].dessa_name = 'old_' + i.dessa_name #'tmp' + str(tmp_index)
                 nst.dest[0].addr = i.addr
+                nst.dest[0].data_type = i.data_type
                 tmp_index += 1
                 nst.expr = Expr(VAR, [i])
                 nst.next = [old_start]
