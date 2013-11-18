@@ -144,6 +144,12 @@ class SSADef:
     self.dessa_name = None
     self.is_dessa_tmp = dessa_tmp
     self.data_type = SSAType()
+    if self.type == 'M':
+      self.data_type.size = 8
+    elif self.type == 'Mh':
+      self.data_type.size = 16
+    elif self.type == 'Mw':
+      self.data_type.size = 32
     self.parent_def = None
     if dtype.startswith('ap'):
       debug(SSA, 6, "adding new def to stack objs")
