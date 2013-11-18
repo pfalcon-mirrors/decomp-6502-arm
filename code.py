@@ -76,7 +76,7 @@ def ssatype2c(ssat):
   else:
     t += '_t'
 
-  if ssat.type == SSAType.DPOINTER:
+  if ssat.is_dpointer():
     t += ' *'
   return t
 
@@ -225,7 +225,11 @@ class Code:
           ret = 'arr_' + zhex(ex.ops[base_op])
           self.declare_arrays[ret] = type
         else:   
-          ret = '((' + type + ' *)' + self.any2c(ex.ops[base_op]) + ')'
+          if isinstance(ex.ops[base_op], SSADef) and ex.ops[base_op].data_type.is_dpointer(access_size(ex.type)):
+            ret = self.any2c(ex.ops[base_op])
+            # XXX: what about operator precedence?
+          else:
+            ret = '((' + type + ' *)' + self.any2c(ex.ops[base_op]) + ')'
         ret += '[' + self.any2c(ex.ops[idx_op]) + ']'
       else:
         if isinstance(ex.ops[0], int):
@@ -255,8 +259,12 @@ class Code:
         if do_array:
           ret = 'arr_' + zhex(ex.ops[base_op+1])
           self.declare_arrays[ret] = type
-        else:   
-          ret = '((' + type + ' *)' + self.any2c(ex.ops[base_op+1]) + ')'
+        else:
+          if isinstance(ex.ops[base_op+1], SSADef) and ex.ops[base_op+1].data_type.is_dpointer(access_size(ex.type)):
+            ret = self.any2c(ex.ops[base_op+1])
+            # XXX: what about operator precedence?
+          else:
+            ret = '((' + type + ' *)' + self.any2c(ex.ops[base_op+1]) + ')'
         ret += '[' + self.any2c(ex.ops[idx_op+1]) + '] = ' + self.any2c(ex.ops[0])
       else:
         if isinstance(ex.ops[1], int):
