@@ -110,11 +110,11 @@ COMPARE_LE = 90
 AUTO = 91
 
 def access_size(op):
-  if op == LOAD32 or op == STORE32:
+  if op in [LOAD32, STORE32, IOIN32, IOOUT32]:
     return 32
-  elif op == LOAD16 or op == STORE16:
+  elif op in [LOAD16, STORE16, IOIN16, IOOUT16]:
     return 16
-  elif op == LOAD or op == STORE:
+  elif op in [LOAD, STORE, IOIN, IOOUT]:
     return 8
   else:
     raise InternalError("unknown access size for op")
