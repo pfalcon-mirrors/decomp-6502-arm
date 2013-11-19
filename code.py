@@ -255,6 +255,7 @@ class Code:
           self.declare_arrays[ret] = type
         else:   
           if isinstance(ex.ops[base_op], SSADef) and ex.ops[base_op].data_type.is_dpointer(access_size(ex.type)):
+            debug(TYPE, 6, 'at access (load)',ex.ops[base_op],ex.ops[base_op].data_type)
             ret = self.any2c(ex.ops[base_op])
             # XXX: what about operator precedence?
           else:
@@ -290,6 +291,7 @@ class Code:
           self.declare_arrays[ret] = type
         else:
           if isinstance(ex.ops[base_op+1], SSADef) and ex.ops[base_op+1].data_type.is_dpointer(access_size(ex.type)):
+            debug(TYPE, 6, 'at access (store)',ex.ops[base_op+1],ex.ops[base_op+1].data_type)
             ret = self.any2c(ex.ops[base_op+1])
             # XXX: what about operator precedence?
           else:
@@ -656,6 +658,7 @@ class Code:
       # workaround for dead arguments that have not been pruned after return
       # identification
       if i.dessa_name != None and i.type[0] != 'M' and not (i.type == 's' and i.addr < 0) and not i.is_dessa_tmp:
+        debug(TYPE, 6, 'at header',i,i.data_type)
         c_header += ssatype2c(i.data_type) + ' '
         if i.type == 's':
           c_header += i.dessa_name + '_' + zhex(i.addr)

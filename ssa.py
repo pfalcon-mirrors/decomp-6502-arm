@@ -187,13 +187,13 @@ class SSADef:
     return s
 
 class SSAType:
-  UNKNOWN = 1
-  SCALAR = 2
-  DPOINTER = 3
-  FPOINTER = 4
-  COMPOUND = 5
-  SIGNED = 6
-  UNSIGNED = 7
+  UNKNOWN = 0
+  SCALAR = 1
+  DPOINTER = 2
+  FPOINTER = 3
+  COMPOUND = 4
+  SIGNED = 5
+  UNSIGNED = 6
   def __init__(self):
     self.type = SSAType.UNKNOWN
     self.size = 0
@@ -204,6 +204,10 @@ class SSAType:
       return self.type == SSAType.DPOINTER and self.size == size
     else:
       return self.type == SSAType.DPOINTER
+
+  def __str__(self):
+    types = ['unknown', 'scalar', 'dpointer', 'fpointer', 'compound', 'signed', 'unsigned']
+    return types[self.signedness] + types[self.type] + str(self.size)
 
 
 import ssa_6502
@@ -906,6 +910,15 @@ class SSAGraph:
               debug(TYPE, 5, mark, 'assignment reverse', i)
               j.ops[0].data_type = i.dest[0].data_type
               found = True
+            if i.op == ASGN and j.type == PHI:
+              for k in i.dest + j.ops:
+                if isinstance(k, SSADef) and k.data_type.type != SSAType.UNKNOWN:
+                  for l in i.dest + j.ops:
+                    if isinstance(l, SSADef) and l.data_type.type == SSAType.UNKNOWN:
+                      l.data_type = k.data_type
+                      debug(TYPE, 5, mark, 'phi assign', k, 'to', l, 'in', i)
+                      found = True
+                  break
 
 def ssaify(insn, symbol, iomap):
   if insn.addr in ssacache:
