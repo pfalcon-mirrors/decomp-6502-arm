@@ -26,23 +26,23 @@
 - often temporary locals are created for registers clobbered by function
   calls even though the semantics of C would not require them
   (e.g. maskrom 0x21a4)
-- ARM: make sure all stack-relative accesses are SSA'd as such (search
-  for "r13" in output)
 - simplify expressions containing program counter (search for "r15")
 - simplify off-by-one comparisons that are often the result of the
   loop-crement simplification
 - do the test-after-update loop simplification also if the test is a
   bit further down the line (see maskrom fun_8720)
-- strategy for recognizing compound types: use of the same pointer
-  in different-sized accesses at different offsets
+- strategy for recognizing compound types not passed by reference: use of
+  the same pointer in different-sized accesses at different offsets
 - maskrom fun_3578 doesn't take any parameters, but all calls seem
   to feel a need to pass some...
-- too many address operators! (see maskrom fun_c800)
-- make stack pointer copying an expression, not a definition
-  - allows simplification in expr
-  - objects can be determined on recovery
-  - base/frame pointer tracking can be done by looking at sp
-    writes only
+- make thunks etc. clobber all registers (e.g. maskrom basC88C: call
+  clobbers R0, but previous value (a pointer) is still used for
+  comparison)
+- consider reading r15 a (data) pointer
+
+=== REVIEW
+- check that all R13 reads are Expr(AUTO,'d
+- check that all R13 writes update sp/bp
 
 === OPTIONAL
 - export graphs to graphviz:
@@ -227,3 +227,11 @@
 - sometimes conditions cannot be simplified because complex expressions
   are not propagated (e.g. maskrom 0x80b4)	DONE
 - sort stack arguments in function headers	DONE
+- ARM: make sure all stack-relative accesses are SSA'd as such (search
+  for "r13" in output)	DONE
+- make stack pointer copying an expression, not a definition	DONE
+  - allows simplification in expr
+  - objects can be determined on recovery
+  - base/frame pointer tracking can be done by looking at sp
+    writes only
+- too many address operators! (see maskrom fun_c800) DONE (I think...)
