@@ -156,7 +156,7 @@ def translate(self, ctx, insn, sp, end_bp, bp):
   def creg(num):
     nonlocal sp
     if num == 13:
-      return SSADef.cur(ctx, 'ap', sp)
+      return Expr(AUTO, [sp, -1])
     elif num == 15:
       return insn.addr + 8
     else:
@@ -494,12 +494,12 @@ def translate(self, ctx, insn, sp, end_bp, bp):
             st.expr = Expr(CONST, [imm])
         else:
           if insn.rn == 13 and insn.op & 0x20 == 0x20 and alu_op == 4:
-            st.expr = Expr(VAR, [SSADef.cur(ctx, 'ap', sp + imm)])
+            st.expr = Expr(AUTO, [sp + imm, -1])
             # XXX: may be better to do this on CALL
             if sp + imm < bp:
               bp = sp + imm
           elif insn.rn == 13 and insn.op & 0x20 == 0x20 and alu_op == 2:
-            st.expr = Expr(VAR, [SSADef.cur(ctx, 'ap', sp - imm)])
+            st.expr = Expr(AUTO, [sp - imm, -1])
             if sp - imm < bp:
               bp = sp - imm
           else:

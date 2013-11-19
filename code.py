@@ -95,6 +95,34 @@ class Code:
     self.declare_globals = dict()
     self.declare_arrays = dict()
 
+    self.structs = dict()	# global for all functions
+    self.struct_members = dict()	# reset when starting function
+
+  # get the type for struct at addr/size
+  def get_struct(self, addr, size):
+    if (self.graph, addr, size) in self.structs:
+      return ssatype2c(self.structs[(self.graph, addr, size)])
+    debug(CODE, 6, 'new struct', addr, size)
+    s = SSAType()
+    s.type = SSAType.COMPOUND
+    s.size = size
+    s.members = []
+    self.structs[(self.graph, addr, size)] = s
+    return ssatype2c(s)
+
+  # fill struct type with registered members
+  # XXX: can't this be done in add_struct_members?
+  def update_structs(self):
+    for k, s in self.structs.items():
+      for i, t in self.struct_members.items():
+        debug(CODE, 6, 'structmem', i, t)
+        if i[1] == k[1] and i[2] == k[2]:
+          s.members.append((t, i[0] - i[1]))
+
+  # register a known struct member by struct addr/size
+  def add_struct_member(self, ssad, addr, size):
+    debug(CODE, 6, 'add struct member', ssad, addr, size)
+    self.struct_members[(ssad.addr, addr, size)] = ssad.data_type
 
   def label(self, blk):
     if blk.start_st.op == RETURN or (blk.end_st and blk.end_st.op == RETURN):
@@ -115,10 +143,11 @@ class Code:
       return self.def2c(any, prio, implicit_global)
     raise InternalError('unknown operand ' + str(any) + ' of type ' + str(type(any)))
 
-  def def2c(self, ssad, prio = 19, implicit_global=False, deref_compound = True):
+  def def2c(self, ssad, prio = 19, implicit_global=False):
     if ssad.type == 's' and ssad.parent_def != None:
       debug(CODE, 6, 'found',ssad,'to be member of', ssad.parent_def)
-      s = self.def2c(ssad.parent_def, deref_compound = False) + '.' + 'mem_' + zhex(ssad.addr - ssad.parent_def.addr)
+      s = self.expr2c(ssad.parent_def, deref_auto = False) + '.' + 'mem_' + zhex(ssad.addr - ssad.parent_def.ops[0])
+      self.add_struct_member(ssad, ssad.parent_def.ops[0], ssad.parent_def.ops[1])
     elif isinstance(ssad.addr, int):
       if ssad.dessa_name == None:
         raise InternalError('no dessa_name in ' + str(ssad) + '(' + repr(ssad) + '), defined in ' + str(ssad.define_statement))
@@ -137,11 +166,11 @@ class Code:
         self.declare_locals[s] = (ctype, None)
     if ssad.type == 's' and ssad.addr in [1,2] and arch.stacked_return_address:
       current_statement.add_comment('XXX: stacked return address accessed')
-    if ssad.data_type.type == SSAType.COMPOUND and deref_compound:
+    if ssad.data_type.type == SSAType.COMPOUND:
       s = '&' + s
     return s
 
-  def expr2c(self, ex, prio = 19, preferhex=False):
+  def expr2c(self, ex, prio = 19, preferhex=False, deref_auto = True):
     myprio = 18
 
     def unop(operator):
@@ -459,6 +488,14 @@ class Code:
     elif ex.type == FLAGS:
       ret = '__flags(' + ', '.join([self.any2c(x, 18) for x in ex.ops]) + ')'
       myprio = 2	# function call
+    elif ex.type == AUTO:
+      ret = 'ap_' + zhex(ex.ops[0])
+      myprio = 1
+      if ret not in self.declare_locals:
+        self.declare_locals[ret] = (self.get_struct(ex.ops[0], ex.ops[1]), None)
+      if deref_auto:
+        ret = '&' + ret
+        myprio = 3	# address operator
     else:
       ret = 'RAW ' + str(ex)
     if myprio >= prio:
@@ -639,6 +676,8 @@ class Code:
     self.declare_locals = dict()
     self.declare_globals = dict()
     self.declare_arrays = dict()
+
+    self.struct_members = dict()
 
     def do_code(blk, norecurse = False):
       global current_statement
@@ -863,6 +902,18 @@ class Code:
             c_extern += 'extern ' + arch.register_type + ' *__sp;\n'
             declare_stack = True
         c_decl += ';\n'
+
+    # declare struct types
+    self.update_structs()
+    for i, t in self.structs.items():
+      if i[0] == self.graph:	# only the ones from this function
+        c_extern += ssatype2c(t) + ' {\n'
+        if t.members:
+          for tp, o in t.members:	# XXX: sorting?
+            c_extern += ind(indent) + ssatype2c(tp) + ' mem_' + zhex(o) + ';\n'
+        else:
+          c_extern += ind(indent) + '/* no known members */\n'
+        c_extern += '};\n'
 
     for i, t in sorted(self.declare_globals.items()):
       c_extern += 'extern ' + t + ' ' + i + ';\n'

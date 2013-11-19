@@ -839,18 +839,23 @@ class SSAGraph:
 
   def recover_compound_types(self):
     high = self.end_base_ptr
-    for i in sorted(self.stack_obj_ptrs):	# top down
-      for j in self.stack_obj_defs:
-        if j in self.definitions_all and j.addr == i:
-          # found a reaching stack object for this address
-          j.data_type.size = high - i
-          debug(SSA, 6, 'recovered size of', j, 'to be', high - i)
-          # find stack scalars that are part of this object
-          for k in self.get_all_defs():	# XXX: self.definitions_all?
-            if k.type == 's' and (k.addr >= j.addr and k.addr < j.addr + j.data_type.size):
-              debug(SSA, 6, 'declaring', k, 'to be member of', j)
-              k.parent_def = j
-      high = i
+    self.stack_obj_ptrs = set()
+    for i in self.getall():
+      if i.expr != None:
+        for j in [i.expr] + i.expr.getallsubexprs():
+          if j.type == AUTO:
+            self.stack_obj_ptrs.add(j)
+            debug(SSA, 6, 'found stack obj', j)
+
+    for i in sorted(self.stack_obj_ptrs, key=attrgetter('ops')):	# top down
+      # found a reaching stack object for this address
+      assert(isinstance(i.ops[0], int))
+      i.ops[1] = high - i.ops[0]
+      for k in self.get_all_defs():	# XXX: self.definitions_all?
+        if k.type == 's' and (k.addr >= i.ops[0] and k.addr < i.ops[0] + i.ops[1]):
+          debug(SSA, 6, 'declaring', k, 'to be member of', i)
+          k.parent_def = i
+      high = i.ops[0]
 
   def recover_simple_types(self, mark):
     found = True

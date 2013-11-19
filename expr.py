@@ -107,6 +107,7 @@ IOIN32 = 87
 IOOUT16 = 88
 IOOUT32 = 89
 COMPARE_LE = 90
+AUTO = 91
 
 def access_size(op):
   if op == LOAD32 or op == STORE32:
@@ -224,6 +225,7 @@ class Expr:
       COMPARE_GTS: ' >s',
       COMPARE_LTS: ' <s',
       COMPARE_LES: ' <=s',
+      AUTO: 'ap',
     }
     s = '('
     if (len(self.ops) == 1 and t[self.type] != '') or self.type == PHI:
