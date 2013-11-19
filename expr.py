@@ -500,6 +500,18 @@ class Expr:
       self.type = NOT
       self.ops = [self.ops[0]]
       simplifications += 'movz '
+
+    def sim_aba(a, b):
+      nonlocal simplifications
+      if self.type == a and len(self.ops) == 2 and isinstance(self.ops[0], Expr) and self.ops[0].type == b and len(self.ops[0].ops) == 2 and isinstance(self.ops[0].ops[0], Expr) and self.ops[0].ops[0].type == a:
+        if self.ops[1] == self.ops[0].ops[1] and self.ops[1] == self.ops[0].ops[0].ops[1]:
+          self.ops[0] = self.ops[0].ops[0].ops[0]
+          simplifications += 'simaba '
+    sim_aba(SHR, SHL)
+    sim_aba(SHL, SHR)
+    sim_aba(ADD, SUB)
+    sim_aba(SUB, ADD)
+
     if nowop != str(self):
       debug(EXPR, 4, 'simplified', nowop, 'to', self, 'using', simplifications)
       self.simplify()
