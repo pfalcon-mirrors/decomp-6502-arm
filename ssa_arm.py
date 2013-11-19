@@ -65,7 +65,6 @@ def translate(self, ctx, insn, sp, end_bp, bp):
     nonlocal st
     st.op = ASGN
     if self.is_io(addr):
-      # XXX: size?
       if size == 1:
         op = IOIN
       elif size == 2:
@@ -173,7 +172,7 @@ def translate(self, ctx, insn, sp, end_bp, bp):
       op = ROR
     if insn.shift_rot == 1:
       # rs
-      return Expr(op, [SSADef.cur(ctx, 'R'+str(insn.rm)), SSADef.cur(ctx, 'R'+str(insn.rs))])
+      return Expr(op, [creg(insn.rm), creg(insn.rs)])
     else:
       # imm
       return Expr(op, [creg(insn.rm), insn.shift_bits])
@@ -306,7 +305,7 @@ def translate(self, ctx, insn, sp, end_bp, bp):
           st.chain(ctx, st1)
           st = st1
           st.op = ASGN
-          st.expr = Expr(ADD, [SSADef.cur(ctx, 'R'+str(insn.rn)), off])
+          st.expr = Expr(ADD, [creg(insn.rn), off])
           st.dest = [SSADef(ctx, 'R'+str(insn.rn))]
   elif insn.op & 0xe4 == 4 and insn.imm8 & 0x90 == 0x90:	# LDRH/STRH rd, [rn, +-immWEIRD]
       imm = insn.rm | (insn.rs >> 4)
@@ -339,13 +338,13 @@ def translate(self, ctx, insn, sp, end_bp, bp):
         st.chain(ctx, st1)
         st = st1
         st.op = ASGN
-        st.expr = Expr(ADD, [SSADef.cur(ctx, 'R'+str(insn.rn)), imm])
+        st.expr = Expr(ADD, [creg(insn.rn), imm])
         st.dest = [SSADef(ctx, 'R'+str(insn.rn))]
   elif insn.op == 0x32:	# MSR CPSR_f, rm
       debug(SSA, 5, "MSR CPSR_f, rm")
       st.op = IMPURE
       st.dest = []
-      st.expr = Expr(INTRINSIC, ['msr_cpsr_f', SSADef.cur(ctx, 'R'+str(insn.rm))])
+      st.expr = Expr(INTRINSIC, ['msr_cpsr_f', creg(insn.rm)])
   elif insn.op & 0xf0 == 0xb0:	# BL off24
     st.expr = Expr(ARGS, [insn.addr + 8 + insn.off24 * 4] + self.fun_args(ctx, insn.next[1], st, sp))
     st.dest = self.fun_returns(ctx, insn.next[1], st)
@@ -395,7 +394,7 @@ def translate(self, ctx, insn, sp, end_bp, bp):
             st.chain(ctx, st1)
             st = st1
           st.op = ASGN
-          st.expr = Expr(ADD, [SSADef.cur(ctx, 'R'+str(insn.rn)), off])
+          st.expr = Expr(ADD, [creg(insn.rn), off])
           st.dest = [SSADef(ctx, 'R'+str(insn.rn))]
     if do_return:
       if st.op != None:
@@ -414,12 +413,12 @@ def translate(self, ctx, insn, sp, end_bp, bp):
     else:
       st.dest = []
       st.op = IMPURE
-      st.expr = Expr(INTRINSIC, ['bx', SSADef.cur(ctx, 'R'+str(insn.rm))])
+      st.expr = Expr(INTRINSIC, ['bx', creg(insn.rm)])
       st.add_comment('XXX: indirect jump not implemented yet')
   elif insn.bytes[0] & 0xffffff0 == 0x012fff30:	# BLX rm
     st.dest = []
     st.op = IMPURE
-    st.expr = Expr(INTRINSIC, ['blx', SSADef.cur(ctx, 'R'+str(insn.rm))])
+    st.expr = Expr(INTRINSIC, ['blx', creg(insn.rm)])
     st.add_comment('XXX: indirect call not implemented yet')
   elif insn.op & 0xc0 == 0x00:	# ALU rd, rn, #imm8 <> rs / rm <> shift
       alu_op = (insn.op >> 1) & 0xf
@@ -503,7 +502,7 @@ def translate(self, ctx, insn, sp, end_bp, bp):
             if sp - imm < bp:
               bp = sp - imm
           else:
-            op1 = SSADef.cur(ctx, 'R'+str(insn.rn))
+            op1 = creg(insn.rn)
             if reverse:
               op2 = op1
               op1 = imm
