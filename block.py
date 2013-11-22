@@ -29,7 +29,6 @@ class BasicBlock:
     self.start_st = None
     self.end_st = None
     self.containered = False
-    self.dont_clip = False
     self.clipped = False
   
   def __str__(self):
@@ -241,10 +240,6 @@ class AdvancedBlock(BasicBlock):
 def structure(block, done = None):
   if done == None:
     done = dict()
-    if block.start_st != block.end_st:
-      block.dont_clip = True
-      # This assumes that clipping is only done one multi-statement blocks.
-      debug(BLOCK, 5, 'dontclipping', block)
   found = False
   done[block] = True
   startblock = block
@@ -279,7 +274,7 @@ def structure(block, done = None):
       skip.recomefrom([do, block], ab)
       block.relink(ab)
       startblock = ab
-    elif (do == block or skip == block) and not block.containered and not block.dont_clip:
+    elif (do == block or skip == block) and not block.containered:
       debug(BLOCK, 3, 'FOUND POST LOOP!!!')
       found = True
       ab = AdvancedBlock()
@@ -313,8 +308,7 @@ def structure(block, done = None):
       block.relink(ab)
       startblock = ab
     elif len(do.next) == 1 and len(skip.next) == 1 and \
-       do.next[0] == skip.next[0] and not (skip.containered or do.containered) and \
-       not block.containered and not block.dont_clip:
+       do.next[0] == skip.next[0] and not (skip.containered or do.containered) and not block.containered:
       debug(BLOCK, 3, 'FOUND AN IF/THEN/ELSE!!!!')
       found = True
       ab = AdvancedBlock()
@@ -346,7 +340,7 @@ def structure(block, done = None):
     elif ((len(do.next) == 1 and do.next[0] == skip and not do.containered) or \
          (len(skip.next) == 1 and skip.next[0] == do and not skip.containered) or \
          (do.next == [] and not do.containered) or (skip.next == [] and not skip.containered)) and \
-         not block.containered and not block.dont_clip:
+         not block.containered:
       debug(BLOCK, 3, 'FOUND AN IF/THEN!!!')
       found = True
       ab = AdvancedBlock()
@@ -406,8 +400,7 @@ def structure(block, done = None):
     startblock = ab
   elif len(block.next) == 1 and len(block.next[0].next) == 2 and \
      (block.next[0].next[0] == block or block.next[0].next[1] == block) and \
-     len(block.next[0].comefrom) == 1 and not block.containered and not block.next[0].containered and \
-     not block.next[0].dont_clip:
+     len(block.next[0].comefrom) == 1 and not block.containered and not block.next[0].containered:
     debug(BLOCK, 3, 'FOUND TWO-BLOCK LOOP!!!')
     found = True
     ab = AdvancedBlock()
