@@ -512,6 +512,16 @@ class Expr:
     sim_aba(ADD, SUB)
     sim_aba(SUB, ADD)
 
+    def sim_ab(a, b):
+      nonlocal simplifications
+      if self.type == a and len(self.ops) == 2 and isinstance(self.ops[0], Expr) and self.ops[0].type == b and len(self.ops[0].ops) == 2:
+        if self.ops[1] == self.ops[0].ops[1]:
+          self.type = VAR
+          self.ops = [self.ops[0].ops[0]]
+          simplifications += 'simab '
+    sim_ab(ADD, SUB)
+    sim_ab(SUB, ADD)
+
     if nowop != str(self):
       debug(EXPR, 4, 'simplified', nowop, 'to', self, 'using', simplifications)
       self.simplify()
