@@ -397,7 +397,7 @@ class Expr:
       self.type = VAR
       self.ops = [self.ops[0]]
       simplifications += 'shl/r#0 '
-    if self.type == NOT and isinstance(self.ops[0], Expr) and self.ops[0].type in [COMPARE_EQ, COMPARE_GE, COMPARE_NE, COMPARE_LT, ANDFLAGS_Z, ANDFLAGS_NOTZ, EORFLAGS_N, EORFLAGS_NOTN, COMPARE_GES]:
+    if self.type == NOT and isinstance(self.ops[0], Expr) and self.ops[0].type in [COMPARE_EQ, COMPARE_GE, COMPARE_NE, COMPARE_LT, ANDFLAGS_Z, ANDFLAGS_NOTZ, EORFLAGS_N, EORFLAGS_NOTN, COMPARE_GES, COMPARE_GTS, COMPARE_LTS]:
       inside = self.ops[0]
       self.ops = inside.ops
       if inside.type == COMPARE_EQ:
@@ -418,6 +418,10 @@ class Expr:
         self.type = EORFLAGS_N
       elif inside.type == COMPARE_GES:
         self.type = COMPARE_LTS
+      elif inside.type == COMPARE_GTS:
+        self.type = COMPARE_LES
+      elif inside.type == COMPARE_LTS:
+        self.type = COMPARE_GES
       simplifications += 'notcond '
     if self.type in [COMPARE_EQ, COMPARE_NE, ANDFLAGS_N, ANDFLAGS_Z] and isinstance(self.ops[0], int) and isinstance(self.ops[1], int):
       if self.type == COMPARE_EQ:
