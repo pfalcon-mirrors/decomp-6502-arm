@@ -108,6 +108,18 @@ IOOUT16 = 88
 IOOUT32 = 89
 COMPARE_LE = 90
 AUTO = 91
+COMPARE_GT = 92
+
+compares = [COMPARE_EQ, COMPARE_GE, COMPARE_NE, COMPARE_LT, COMPARE_GES, COMPARE_GTS,
+  COMPARE_LTS, COMPARE_LES, COMPARE_LE, SUBFLAGS_V]
+signed_compares = [COMPARE_GES, COMPARE_GTS, COMPARE_LTS, COMPARE_LES, SUBFLAGS_V]
+unsigned_compares = [COMPARE_GE, COMPARE_LT, COMPARE_LE, COMPARE_GT]
+unsigned_to_signed = {
+  COMPARE_GE: COMPARE_GES,
+  COMPARE_LT: COMPARE_LTS,
+  COMPARE_LE: COMPARE_LES,
+  COMPARE_GT: COMPARE_GTS
+}
 
 def access_size(op):
   if op in [LOAD32, STORE32, IOIN32, IOOUT32]:
@@ -148,6 +160,7 @@ class Expr:
       VAR: '',
       COMPARE_EQ: ' ==',
       COMPARE_GE: ' >=',
+      COMPARE_GT: ' >',
       COMPARE_NE: ' !=',
       COMPARE_LT: ' <',
       COMPARE_LE: ' <=',
@@ -525,6 +538,21 @@ class Expr:
           simplifications += 'simab '
     sim_ab(ADD, SUB)
     sim_ab(SUB, ADD)
+
+    if self.type in compares and isinstance(self.ops[0], Expr) and self.ops[0].type in [ADD, SUB] and \
+      len(self.ops[0].ops) == 2 and isinstance(self.ops[0].ops[1], int) and isinstance(self.ops[1], int):
+        if self.ops[0].type == ADD:
+          new_op1 = self.ops[1] - self.ops[0].ops[1]
+        else:
+          new_op1 = self.ops[1] + self.ops[0].ops[1]
+        # if the new second operand is zero, turn unsigned comparison to signed
+        # one to avoid problems with underflow (e.g. r0 + 1 < 1 => r0 < 0)
+        # XXX: this isn't correct in all cases either, but usually works
+        if self.type in unsigned_compares and new_op1 == 0:
+          self.type = unsigned_to_signed[self.type]
+        self.ops[1] = new_op1
+        self.ops[0] = Expr(VAR, [self.ops[0].ops[0]])
+        simplifications += 'obocmp '
 
     if nowop != str(self):
       debug(EXPR, 4, 'simplified', nowop, 'to', self, 'using', simplifications)
