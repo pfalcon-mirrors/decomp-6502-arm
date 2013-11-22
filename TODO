@@ -26,11 +26,6 @@
 - often temporary locals are created for registers clobbered by function
   calls even though the semantics of C would not require them
   (e.g. maskrom 0x21a4)
-- simplify expressions containing program counter (search for "r15")
-- simplify off-by-one comparisons that are often the result of the
-  loop-crement simplification
-- do the test-after-update loop simplification also if the test is a
-  bit further down the line (see maskrom fun_8720)
 - strategy for recognizing compound types not passed by reference: use of
   the same pointer in different-sized accesses at different offsets
 - maskrom fun_3578 doesn't take any parameters, but all calls seem
@@ -39,6 +34,33 @@
   clobbers R0, but previous value (a pointer) is still used for
   comparison)
 - consider reading r15 a (data) pointer
+- sort function call arguments
+- sort return structure members
+- recover pointer-pointer types (e.g. maskrom fun_ebf0, but this really
+  is a struct pointer...)
+- unwarranted gotos: (maskrom)
+  - fun_08f8: can't structure because function call is not propagated
+  - fun_ebf0: code at ret_ef8c, ret_edf0 should be replicated instead
+  - guess_39b4: ret_3af8 should be replicated
+  - fun_2b24: unrecognized ITE
+  - fun_3578: condition before label_370c should be
+    "r0 == 0x10000007 || r0 == 0"
+  - fun_b800: ret_baf0 should be replicated
+  - fun_b800: "if(0) goto ..." should be eliminated (if correct)
+  - fun_f074: ret_f0c4 should be replicated
+  - fun_f074: condition before label_f0d0 should be inverted
+  - fun_1cac: unrecognized infinite loops at label_1e3c, label_1e24
+  - fun_1cac: nested loops label_1da0/label_1d20
+  - fun_40a8: invert condition
+  - fun_efa0: label_efd4 is a pre-tested loop (probably due to missing
+    function call propagation)
+  - fun_8398: condition before ret_8474 needs to be inverted
+  - guess_2be8: label_2d24 is a for(;;) loop
+  - TBC... (at fun_918c)
+- maskrom fun_d21c: unrecognized I/O
+- maskrom fun_b800: unused regparms must still be coded in header
+- simplify "~0x10000" and "<< 10 >> 10" to "(uint16_t)"
+- maskrom fun_40a8: simplify condition "r0 >= 764 & r0 != 764"
 
 === REVIEW
 - check that all R13 reads are Expr(AUTO,'d
@@ -62,6 +84,8 @@
 - operator precedence for type cast
 - unconditional loop at SMB:label_811b
 - f580: why is there a double arrow in advsequencef52c?
+- scale array accesses correctly as per data type (later because I fear
+  this might hide bugs (or become a hidden bug))
 
 === DONE
 
@@ -235,3 +259,9 @@
   - base/frame pointer tracking can be done by looking at sp
     writes only
 - too many address operators! (see maskrom fun_c800) DONE (I think...)
+- simplify off-by-one comparisons that are often the result of the
+  loop-crement simplification	DONE (not 100% safe though...)
+- do the test-after-update loop simplification also if the test is a
+  bit further down the line (see maskrom fun_8720)	DONE
+- simplify expressions containing program counter (search for "r15") DONE (I
+  think)
