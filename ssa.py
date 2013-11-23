@@ -868,15 +868,17 @@ class SSAGraph:
 
   def recover_compound_types(self):
     high = self.end_base_ptr
+    debug(TYPE, 6, 'high at', high)
     self.stack_obj_ptrs = set()
     for i in self.getall():
       if i.expr != None:
         for j in [i.expr] + i.expr.getallsubexprs():
           if j.type == AUTO:
             self.stack_obj_ptrs.add(j)
-            debug(SSA, 6, 'found stack obj', j)
+            debug(TYPE, 6, 'found stack obj', j)
 
-    for i in sorted(self.stack_obj_ptrs, key=attrgetter('ops')):	# top down
+    for i in sorted(self.stack_obj_ptrs, key=attrgetter('ops'), reverse=True):	# top down
+      debug(TYPE, 6, 'checking obj', i)
       # found a reaching stack object for this address
       assert(isinstance(i.ops[0], int))
       i.ops[1] = high - i.ops[0]
