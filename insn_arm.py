@@ -41,11 +41,12 @@ def trace(self, code, org, addr, ins):
       ins2.cond = 0xe
 
       cond_end = addr + 4
-      while struct.unpack('<I', code[cond_end-org : cond_end-org+4])[0] >> 28 == ins.cond:
+      while struct.unpack('<I', code[cond_end-org : cond_end-org+4])[0] >> 28 == ins.cond and cond_end - org < len(code) - 4:
         # modify machine code to make subsequent insns with the same condition
         # unconditional
         # XXX: yuck; find a way to do this without changing the source text
-        code[cond_end+3] = (code[cond_end+3] & 0xf) | 0xe0
+        debug(TRACE, 4, 'unconding', hex(cond_end), hex(len(code)),hex(org))
+        code[cond_end-org+3] = (code[cond_end-org+3] & 0xf) | 0xe0
         cond_end += 4
 
       ins.artificial_branch = cond_end
