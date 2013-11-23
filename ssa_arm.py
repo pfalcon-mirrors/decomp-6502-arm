@@ -267,6 +267,12 @@ def translate(self, ctx, insn, sp, end_bp, bp):
           do_ld_abs('R'+str(insn.rd), insn.fixed_mem, size)
         else:
           do_st_abs('R'+str(insn.rd), insn.fixed_mem, size)
+      elif insn.fixed_stack != -1:
+        debug(SSA, 6, 'transing fixed stack insn', insn)
+        if insn.op & 1:
+          do_ld_stack('R'+str(insn.rd), insn.fixed_stack-sp, size)
+        else:
+          do_st_stack('R'+str(insn.rd), insn.fixed_stack-sp, size)
       else:
         if insn.op & 1 == 1 and insn.rd == 15:
           # PC load

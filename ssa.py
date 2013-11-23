@@ -714,6 +714,18 @@ class SSAGraph:
             i.insn.fixed_mem = i.expr.ops[1]
           i.insn.fixed_mem += i.expr.ops[0]
           debug(SSA, 5, 'found constant load from', hex(i.insn.fixed_mem), 'in', i)
+      if _pass == 1 and i.op == IMPURE and i.expr.type in [STORE, STORE16, STORE32] and \
+        isinstance(i.expr.ops[2], Expr) and i.expr.ops[2].type == AUTO and \
+        isinstance(i.expr.ops[2].ops[0], int) and \
+        isinstance(i.expr.ops[1], int):
+          i.insn.fixed_stack = i.expr.ops[1] + i.expr.ops[2].ops[0]
+          debug(SSA, 5, 'found fixed stack store to', hex(i.insn.fixed_stack), 'in', i)
+      if _pass == 1 and i.op == ASGN and i.expr.type in [LOAD, LOAD16, LOAD32] and \
+        isinstance(i.expr.ops[1], Expr) and i.expr.ops[1].type == AUTO and \
+        isinstance(i.expr.ops[1].ops[0], int) and \
+        isinstance(i.expr.ops[0], int):
+          i.insn.fixed_stack = i.expr.ops[0] + i.expr.ops[1].ops[0]
+          debug(SSA, 5, 'found fixed stack load from', hex(i.insn.fixed_stack), 'in', i)
       # simplify cases in which a loop counter is incremented/decremented and
       # the old value is checked afterwards; this is a typical result of the
       # ARM idiom "SUBS Rx, Rx,... ; BNE ..."

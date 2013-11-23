@@ -76,6 +76,7 @@ class Insn:
     # actually taken; currently used by conditional branches
     self.fake_branch = -1
     self.fixed_mem = -1
+    self.fixed_stack = -1
     self.artificial_branch = -1
   def __str__(self):
     s = hex(self.addr) + ': ' + self.disas
