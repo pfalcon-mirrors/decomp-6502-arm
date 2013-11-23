@@ -430,6 +430,31 @@ def translate(self, ctx, insn, sp, end_bp, bp):
     st.op = IMPURE
     st.expr = Expr(INTRINSIC, ['blx', creg(insn.rm)])
     st.add_comment('XXX: indirect call not implemented yet')
+  elif insn.bytes[0] & 0x0f900090 == 0x01000080:	# smul/smla
+    op = (insn.op >> 1) & 3
+    x = (insn.imm8 >> 5) & 1
+    y = (insn.imm8 >> 6) & 1
+    if op == 0 or op == 3:
+      m1 = creg(insn.rm)
+      m2 = creg(insn.rs)
+      if x == 0:
+        m1 = Expr(AND, [m1, 0xffff])
+      else:
+        m1 = Expr(SHR, [m1, 16])
+      if y == 0: 
+        m2 = Expr(AND, [m2, 0xffff])
+      else:
+        m2 = Expr(SHR, [m2, 16])
+      st.op = ASGN
+      st.expr = Expr(MUL32, [m1, m2])
+      if op == 0:	# smla
+        st.expr = Expr(ADD, [st.expr, creg(insn.rn)])
+      st.dest = [SSADef(ctx, 'R'+str(insn.rd))]
+    else:
+      debug(SSA, 2, "unimplemented smul", insn)
+      st.op = ASGN
+      st.expr = Expr(INTRINSIC, ["smulw", op, x, y, creg(insn.rm), creg(insn.rs)])
+      st.dest = [SSADef(ctx, 'R'+str(insn.rd))]
   elif insn.op & 0xc0 == 0x00:	# ALU rd, rn, #imm8 <> rs / rm <> shift
       alu_op = (insn.op >> 1) & 0xf
       debug(SSA, 5, "alu op", alu_op)

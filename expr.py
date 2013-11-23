@@ -109,6 +109,7 @@ IOOUT32 = 89
 COMPARE_LE = 90
 AUTO = 91
 COMPARE_GT = 92
+MUL32 = 93
 
 compares = [COMPARE_EQ, COMPARE_GE, COMPARE_NE, COMPARE_LT, COMPARE_GES, COMPARE_GTS,
   COMPARE_LTS, COMPARE_LES, COMPARE_LE, SUBFLAGS_V]
@@ -239,6 +240,7 @@ class Expr:
       COMPARE_LTS: ' <s',
       COMPARE_LES: ' <=s',
       AUTO: 'ap',
+      MUL32: ' *32',
     }
     s = '('
     if (len(self.ops) == 1 and t[self.type] != '') or self.type == PHI:
