@@ -731,12 +731,13 @@ class SSAGraph:
           # sure)
           while len(ii.next) == 1 and len(ii.next[0].comefrom) == 1 and ii.next[0].num > ii.num:
             n = ii.next[0]
-            for j in n.expr.getallops():
-              if i.expr.ops[0] == j:
-                debug(SSA, 6, 'bingo!', j, n)
-                n.expr = n.expr.substitute(j, Expr(compl, [i.dest[0], i.expr.ops[1]]), dup = True)
-                debug(SSA, 6, 'new statement', n)
-                debug(SSA, 6, 'pre statement', i)
+            if n.expr:
+              for j in n.expr.getallops():
+                if i.expr.ops[0] == j:
+                  debug(SSA, 6, 'bingo!', j, n)
+                  n.expr = n.expr.substitute(j, Expr(compl, [i.dest[0], i.expr.ops[1]]), dup = True)
+                  debug(SSA, 6, 'new statement', n)
+                  debug(SSA, 6, 'pre statement', i)
             ii = ii.next[0]
 
   def is_io(self, addr):
