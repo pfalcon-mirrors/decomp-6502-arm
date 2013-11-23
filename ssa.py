@@ -511,6 +511,7 @@ class SSAGraph:
     for i in self.getall():
       if i.op == RETURN:
         for j in i.reaching:
+          assert(isinstance(j, SSADef))
           if not j in self.definitions and not j.type in arch.non_return_locs:
             self.definitions += [j]
           if not j in self.definitions_all:
