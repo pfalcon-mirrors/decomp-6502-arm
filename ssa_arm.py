@@ -276,7 +276,9 @@ def translate(self, ctx, insn, sp, end_bp, bp):
             st.op = ASGN
             st.expr = Expr(NOP, [0])
           else:
-            raise InternalError("non-const PC load")
+            st.dest = []
+            st.op = IMPURE
+            st.expr = Expr(INTRINSIC, ['set_pc', insn.rn, off])
         else:
           if insn.op & 0x10:	# pre indexing
             noff = off
