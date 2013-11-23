@@ -401,7 +401,7 @@ class Expr:
       self.ops[0] = inside.ops[0]
       self.ops[1] = Expr(ADD, [inside.ops[1], self.ops[1]])
       simplifications += 'shl/r '
-    if self.type in [SHL, SHR] and isinstance(self.ops[0], int) and isinstance(self.ops[1], int):
+    if self.type in [SHL, SHR] and isinstance(self.ops[0], int) and isinstance(self.ops[1], int) and self.ops[1] >= 0:
       self.type = CONST
       if self.type == SHL:
         self.ops = [(self.ops[0] << self.ops[1]) & ~(1 << arch.register_size)]
