@@ -573,68 +573,73 @@ class SSAGraph:
             else:
               uses_defs[l] = [k]
 
-    for i in self.getall():
-      # link to defining statement
-      for j in i.dest:
-        j.define_statement = i
-      
-      # remove duplicate args in phi functions
-      if isinstance(i.expr, Expr) and i.expr.type == PHI and len(set(i.expr.ops)) != len(i.expr.ops):
-        nops = []
-        for j in i.expr.ops:
-          if not j in nops:
-            nops += [j]
-        i.expr.ops = nops
-      
-      # eliminate phi functions with only one operand
-      if isinstance(i.expr, Expr) and i.expr.type == PHI and len(i.expr.ops) == 1:
-        debug(SSA, 3, 'dephiing', i)
-        i.expr.type = NOP
-        # rename uses of i.dest
-        if i.dest[0] in uses:
-          for k in uses[i.dest[0]]:
-            # operands
-            if isinstance(k.expr, Expr):
-              if k.expr.type == PHI and k.dest[0] == i.expr.ops[0]:
-                debug(SSA, 6, 'remove', i.dest[0], 'from phi', k)
-                k.expr.remove(i.dest[0])
-              else:
-                k.expr.substitute(i.dest[0], i.expr.ops[0])
-                debug(SSA, 6, 'subbing', i.dest[0], 'for', i.expr.ops[0], 'in', k)
-                # Make sure to add the new definition to uses so it
-                # can itself be replaced if necessary.
-                if i.expr.ops[0] in uses:
-                  uses[i.expr.ops[0]].append(k)
+    dephiid = True
+    while dephiid:
+      dephiid = False
+      for i in self.getall():
+        # link to defining statement
+        for j in i.dest:
+          j.define_statement = i
+        
+        # remove duplicate args in phi functions
+        if isinstance(i.expr, Expr) and i.expr.type == PHI and len(set(i.expr.ops)) != len(i.expr.ops):
+          nops = []
+          for j in i.expr.ops:
+            if not j in nops:
+              nops += [j]
+          i.expr.ops = nops
+          dephiid = True
+
+        # eliminate phi functions with only one operand
+        if isinstance(i.expr, Expr) and i.expr.type == PHI and len(i.expr.ops) == 1:
+          debug(SSA, 3, 'dephiing', i)
+          i.expr.type = NOP
+          dephiid = True
+          # rename uses of i.dest
+          if i.dest[0] in uses:
+            for k in uses[i.dest[0]]:
+              # operands
+              if isinstance(k.expr, Expr):
+                if k.expr.type == PHI and k.dest[0] == i.expr.ops[0]:
+                  debug(SSA, 6, 'remove', i.dest[0], 'from phi', k)
+                  k.expr.remove(i.dest[0])
                 else:
-                  uses[i.expr.ops[0]] = [k]
-        if i.dest[0] in uses_defs:
-          for k in uses_defs[i.dest[0]]:
-            # reachings
-            if k.reaching and k.reaching != []:
-              debug(SSA, 4, 'rereaching', i.dest[0], 'to', i.expr.ops[0], 'in', k)
-              k.reaching = [x if x != i.dest[0] else i.expr.ops[0] for x in k.reaching]
+                  k.expr.substitute(i.dest[0], i.expr.ops[0])
+                  debug(SSA, 6, 'subbing', i.dest[0], 'for', i.expr.ops[0], 'in', k)
+                  # Make sure to add the new definition to uses so it
+                  # can itself be replaced if necessary.
+                  if i.expr.ops[0] in uses:
+                    uses[i.expr.ops[0]].append(k)
+                  else:
+                    uses[i.expr.ops[0]] = [k]
+          if i.dest[0] in uses_defs:
+            for k in uses_defs[i.dest[0]]:
+              # reachings
+              if k.reaching and k.reaching != []:
+                debug(SSA, 4, 'rereaching', i.dest[0], 'to', i.expr.ops[0], 'in', k)
+                k.reaching = [x if x != i.dest[0] else i.expr.ops[0] for x in k.reaching]
 
-              # Make sure to add the new definition to uses_defs so it
-              # can itself be rereached if necessary.
-              if i.expr.ops[0] in uses_defs:
-                uses_defs[i.expr.ops[0]].append(k)
-              else:
-                uses_defs[i.expr.ops[0]] = [k]
-              # XXX: It would feel right to remove k from uses_defs of
-              # i.dest[0] here, but that leads to problems with missing
-              # dessa names, so we don't do it. In the worst case, that
-              # should cause a few redundant rereachings.
+                # Make sure to add the new definition to uses_defs so it
+                # can itself be rereached if necessary.
+                if i.expr.ops[0] in uses_defs:
+                  uses_defs[i.expr.ops[0]].append(k)
+                else:
+                  uses_defs[i.expr.ops[0]] = [k]
+                # XXX: It would feel right to remove k from uses_defs of
+                # i.dest[0] here, but that leads to problems with missing
+                # dessa names, so we don't do it. In the worst case, that
+                # should cause a few redundant rereachings.
 
-              #print('reaching now', [str(x) for x in k.reaching])
-          # rereach definitions
-          if i.dest[0] in self.definitions:
-            self.definitions = [x if x != i.dest[0] else i.expr.ops[0] for x in self.definitions]
-          if self.actual_returns != None:
-            self.actual_returns = [x if x != i.dest[0] else i.expr.ops[0] for x in self.actual_returns]
-        
-        i.dest = []
-        i.expr.ops = [0]
-        
+                #print('reaching now', [str(x) for x in k.reaching])
+            # rereach definitions
+            if i.dest[0] in self.definitions:
+              self.definitions = [x if x != i.dest[0] else i.expr.ops[0] for x in self.definitions]
+            if self.actual_returns != None:
+              self.actual_returns = [x if x != i.dest[0] else i.expr.ops[0] for x in self.actual_returns]
+
+          i.dest = []
+          i.expr.ops = [0]
+
     propped = True
     while propped:
       propped = False
