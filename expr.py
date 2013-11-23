@@ -556,6 +556,15 @@ class Expr:
         self.ops[0] = Expr(VAR, [self.ops[0].ops[0]])
         simplifications += 'obocmp '
 
+    if self.type in [ADD, SUB] and len(self.ops) == 2 and isinstance(self.ops[0], Expr) and self.ops[0].type == AUTO and isinstance(self.ops[1], int):
+      self.type = AUTO
+      if self.type == ADD:
+        off = self.ops[1]
+      else:
+        off = -self.ops[1]
+      self.ops = [self.ops[0].ops[0] + off, self.ops[0].ops[1]]
+      simplifications += 'autooff '
+
     if nowop != str(self):
       debug(EXPR, 4, 'simplified', nowop, 'to', self, 'using', simplifications)
       self.simplify()
