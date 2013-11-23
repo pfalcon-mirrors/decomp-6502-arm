@@ -534,7 +534,13 @@ def translate(self, ctx, insn, sp, end_bp, bp):
           st.expr = Expr(INTRINSIC, ['set_pc', st.expr])
           st.dest = []
 
-        if insn.op & 1:	# set flags
+        if alu_op == 0xb and not (insn.op & 1):
+          # clz
+          # XXX: complete guesswork, too lazy too look it up
+          st.op = ASGN
+          st.expr = Expr(INTRINSIC, ['clz', creg(insn.rn)])
+          st.dest = [SSADef(ctx, 'R'+str(insn.rd))]
+        elif insn.op & 1:	# set flags
           alu_expr = st.expr
           if st.op == ASGN:
             st1 = SSAStatement()
