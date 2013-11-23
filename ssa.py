@@ -432,10 +432,9 @@ class SSAGraph:
            ((not i.desthasmem(self.end_base_ptr)) or i.expr.type == PHI) and \
            len(set(i.dest) & alluses) == 0 and \
            len(set(i.dest) & set(definitions)) == 0 and \
-           not i in i.next and not i.expr.dont_eliminate:
+           not i in i.next and not i.expr.dont_eliminate and len(i.next) == 1:
           debug(SSA, 4, 'eliminate', i.num)
           eliminated = True
-          assert(len(i.next) == 1)
           if len(i.comefrom) > 0:
             # replace us with our successor in predecessors' next
             for j in i.comefrom:
