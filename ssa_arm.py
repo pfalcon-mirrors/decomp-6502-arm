@@ -455,6 +455,17 @@ def translate(self, ctx, insn, sp, end_bp, bp):
       st.op = ASGN
       st.expr = Expr(INTRINSIC, ["smulw", op, x, y, creg(insn.rm), creg(insn.rs)])
       st.dest = [SSADef(ctx, 'R'+str(insn.rd))]
+  elif insn.bytes[0] & 0x0e000010 == 0x06000010:	# media insn
+      # XXX: untested, implemented inadvertently
+      debug(SSA, 2, "unimplemented media instruction", insn)
+      st.op = ASGN
+      st.expr = Expr(INTRINSIC, ["media_insn", insn.bytes[0], creg(insn.rm)])
+      st.dest = [SSADef(ctx, 'R'+str(insn.rd))]
+  elif insn.bytes[0] & 0x0f9000f0 == 0x01000050:	# sat add/sub
+      debug(SSA, 2, "unimplemented saturated add/sub", insn)
+      st.op = ASGN
+      st.expr = Expr(INTRINSIC, ["qaddsub", insn.bytes[0], creg(insn.rn), creg(insn.rm)])
+      st.dest = [SSADef(ctx, 'R'+str(insn.rd))]
   elif insn.op & 0xc0 == 0x00:	# ALU rd, rn, #imm8 <> rs / rm <> shift
       alu_op = (insn.op >> 1) & 0xf
       debug(SSA, 5, "alu op", alu_op)
