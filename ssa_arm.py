@@ -347,6 +347,14 @@ def translate(self, ctx, insn, sp, end_bp, bp):
       st.op = IMPURE
       st.dest = []
       st.expr = Expr(INTRINSIC, ['msr_cpsr_f', creg(insn.rm)])
+  elif insn.bytes[0] & 0x0fbf0fff == 0x010f0000:	# MRS
+      st.op = ASGN
+      st.expr = Expr(INTRINSIC, ['mrs', insn.op & 4])
+      st.dest = [SSADef(ctx, 'R'+str(insn.rd))]
+  elif insn.bytes[0] & 0x0fbffff0 == 0x0129f000:	# MSR
+      st.op = IMPURE
+      st.expr = Expr(INTRINSIC, ['msr', insn.op & 4, creg(insn.rm)])
+      st.dest = []
   elif insn.op & 0xf0 == 0xb0:	# BL off24
     st.expr = Expr(ARGS, [insn.addr + 8 + insn.off24 * 4] + self.fun_args(ctx, insn.next[1], st, sp))
     st.dest = self.fun_returns(ctx, insn.next[1], st)
