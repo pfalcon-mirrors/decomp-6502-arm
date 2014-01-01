@@ -25,7 +25,7 @@ import ssa
 from expr import *
 from util import *
 from debug import *
-from insn import arch
+from insn import arch, Symbol
 
 def ind(num):
   return ' ' * num
@@ -151,7 +151,7 @@ class Code:
     elif isinstance(ssad.addr, int):
       if ssad.dessa_name == None:
         raise InternalError('no dessa_name in ' + str(ssad) + '(' + repr(ssad) + '), defined in ' + str(ssad.define_statement))
-      s = ssad.dessa_name + '_' + zhex(ssad.addr)
+      s = Symbol(ssad.addr, ssad.dessa_name).name
     else:
       assert(ssad.addr == None)
       assert(ssad.dessa_name != None)

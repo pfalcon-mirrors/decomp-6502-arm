@@ -93,12 +93,23 @@ class Insn:
     return s
 
 class Symbol:
+  symbols = None
   def __init__(self, address, name = None):
     self.address = address
-    if name == None:
-      name = 'sym'
-    self.name = name + '_' + zhex(address)
+    if Symbol.symbols and address in Symbol.symbols:
+      self.name = Symbol.symbols[address]
+    else:
+      if name == None:
+        name = 'sym'
+      self.name = name + '_' + zhex(address)
     self.insn = None
+  def load_symbols(file):
+    Symbol.symbols = dict()
+    for i in open(file).readlines():
+      addr, sym = i.strip().split(',')
+      addr = int(addr, 16)
+      #print(hex(addr), sym)
+      Symbol.symbols[addr] = sym
 
 import insn_6502
 import insn_arm
