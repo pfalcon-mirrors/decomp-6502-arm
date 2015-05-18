@@ -58,7 +58,7 @@ class Arch:
       self.stacked_return_address = True
       self.guess_entry_points = insn_6502.guess_entry_points
     else:
-      raise UserError('unknown architecture ' + arm)
+      raise UserError('unknown architecture ' + arch)
 
 arch = Arch()
 config.arch = arch
